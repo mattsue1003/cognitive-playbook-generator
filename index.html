@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>認知手冊生成器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2E2B36; --mute:#6F6A7A; --line:#E6E1D8; --bg:#FFFFFF; --stage:#EEF3F6;
+  --sun:#FFC93C; --sun-deep:#E3A300; --coral:#F0645A; --mint:#2FA886; --sky:#4C9BE8; --grape:#9067D0; --teal:#2C93AE;
+  --panel:#FFFFFF; --chip:#F5F2EC;
+  --title:"LXGW WenKai TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --ink:#F1EEF6; --mute:#B4AEC0; --line:#3A3744; --bg:#1C1B22; --stage:#26252E; --panel:#22212A; --chip:#2E2C36; }
+}
+:root[data-theme="dark"]{ --ink:#F1EEF6; --mute:#B4AEC0; --line:#3A3744; --bg:#1C1B22; --stage:#26252E; --panel:#22212A; --chip:#2E2C36; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px;border-radius:6px}
+
+.top{max-width:1360px;margin:0 auto;padding:28px 24px 8px;display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap}
+.brand{flex:1 1 420px}
+.brand h1{font-family:var(--title);font-weight:700;font-size:clamp(34px,5vw,52px);line-height:1.1;margin:0 0 10px;letter-spacing:.02em}
+.brand p{margin:0;color:var(--mute);max-width:36em}
+.dots{display:flex;gap:6px;margin-bottom:14px}
+.dots i{display:block;height:10px;border-radius:5px}
+.count{flex:0 0 auto;background:var(--chip);border-radius:18px;padding:12px 18px;min-width:220px}
+.count b{font-family:var(--title);font-size:34px;line-height:1;display:block}
+.count span{color:var(--mute);font-size:14px;white-space:pre-line}
+
+.wrap{max-width:1360px;margin:0 auto;padding:16px 24px 48px;display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start}
+@media (max-width:980px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1.5px solid var(--line);border-radius:20px;padding:6px 20px 20px;position:sticky;top:calc(12px + env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow:auto}
+@media (max-width:980px){.panel{position:static;max-height:none}}
+.sec{padding:16px 0 14px;border-bottom:1.5px dashed var(--line)}
+.sec:last-child{border-bottom:0}
+.sec h2{font-family:var(--title);font-size:21px;margin:0 0 10px}
+.field{margin-bottom:12px}
+.field label.lab{display:block;font-size:15px;color:var(--mute);margin-bottom:6px}
+.field input[type=text]{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:15px}
+.seg button[aria-pressed=true]{background:var(--sun);border-color:var(--sun);color:#2E2B36;font-weight:700}
+.doms{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dom{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:14px;padding:8px 10px;cursor:pointer;background:var(--bg);text-align:left}
+.dom .sw{width:16px;height:16px;border-radius:50%;flex:0 0 auto;border:2px solid currentColor}
+.dom small{display:block;color:var(--mute);font-size:12.5px;line-height:1.3}
+.dom[aria-pressed=true]{border-color:currentColor}
+.dom[aria-pressed=true] .sw{background:currentColor}
+.dom b{color:var(--ink);font-size:15px}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.checks label{display:flex;align-items:center;gap:8px;font-size:15px;cursor:pointer}
+.checks input{width:18px;height:18px;accent-color:var(--mint)}
+.hint{font-size:13.5px;color:var(--mute);margin:6px 0 0}
+.reroll{width:100%;margin-top:4px;border:0;background:var(--ink);color:var(--bg);border-radius:14px;padding:12px;font-weight:700;cursor:pointer}
+.dl{display:grid;gap:8px}
+.dl button{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1.5px solid var(--line);background:var(--bg);border-radius:14px;padding:11px 14px;cursor:pointer;text-align:left}
+.dl button b{font-size:16px}
+.dl button span{font-size:13px;color:var(--mute)}
+.dl button.main{background:var(--sun);border-color:var(--sun);color:#2E2B36}
+.dl button.main span{color:#5a4a1a}
+.dl button[disabled]{opacity:.5;cursor:progress}
+.dl button.hide{display:none}
+.tip{font-size:13.5px;color:var(--mute);background:var(--chip);border-radius:12px;padding:10px 12px;margin-top:10px}
+
+.stage{background:var(--stage);border-radius:24px;padding:20px 18px 28px;min-height:60vh}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 4px 16px}
+.bar h2{font-family:var(--title);font-size:22px;margin:0}
+.spreads{display:flex;flex-direction:column;align-items:center;gap:26px}
+.spread{display:flex;flex-direction:column;align-items:center;gap:6px}
+.sheet{display:flex;filter:drop-shadow(0 6px 14px rgba(40,50,70,.16))}
+.sheet.two .holder:first-child .page{border-right:1px solid #E8E3DA}
+.cap{font-size:13px;color:var(--mute)}
+.holder{overflow:hidden}
+.page{position:relative;background:#fff;overflow:hidden;transform-origin:0 0;color:#2E2B36;font-family:var(--body)}
+.page .it{position:absolute}
+.page .tx{white-space:pre-wrap;word-break:break-all;line-height:1.45}
+.page .tx.mid{display:flex;align-items:center}
+.page .tx.mid.c{justify-content:center;text-align:center}
+.page .tx.mid.r{justify-content:flex-end;text-align:right}
+.page .tx.c{text-align:center}.page .tx.r{text-align:right}
+.offscreen{position:fixed;left:-10000px;top:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="dots" aria-hidden="true">
+      <i style="width:46px;background:var(--sky)"></i><i style="width:22px;background:var(--coral)"></i><i style="width:34px;background:var(--sun)"></i><i style="width:14px;background:var(--mint)"></i><i style="width:28px;background:var(--grape)"></i><i style="width:18px;background:var(--teal)"></i>
+    </div>
+    <h1>認知手冊生成器</h1>
+    <p>選好天數和練習內容，做出一本長輩帶回家、每天一頁的動腦手冊。封面、使用說明、完成紀錄和答案都會自動編排好。</p>
+  </div>
+  <div class="count" aria-live="polite"><b id="pc">0 頁</b><span id="pcs"></span></div>
+</header>
+
+<main class="wrap">
+  <aside class="panel" aria-label="手冊設定">
+    <section class="sec">
+      <h2>手冊資料</h2>
+      <div class="field"><label class="lab" for="title">手冊名稱</label><input type="text" id="title" value="我的動腦手冊" maxlength="20"></div>
+      <div class="field"><label class="lab" for="subtitle">副標題（可留空）</label><input type="text" id="subtitle" placeholder="每天動動腦　共 14 天的練習" maxlength="30"></div>
+      <div class="field"><label class="lab" for="org">單位名稱（印在封面與證書）</label><input type="text" id="org" placeholder="例如：某某社區關懷據點" maxlength="30"></div>
+    </section>
+    <section class="sec">
+      <h2>練習內容</h2>
+      <div class="field"><span class="lab" style="display:block;font-size:15px;color:var(--mute);margin-bottom:6px">練習天數</span><div class="seg" data-k="days"><button data-v="7">7 天</button><button data-v="14">14 天</button><button data-v="21">21 天</button><button data-v="28">28 天</button></div></div>
+      <div class="field"><span class="lab" style="display:block;font-size:15px;color:var(--mute);margin-bottom:6px">每天幾題</span><div class="seg" data-k="perDay"><button data-v="1">1 題</button><button data-v="2">2 題</button><button data-v="3">3 題</button></div><p class="hint" id="perHint"></p></div>
+      <div class="field"><span class="lab" style="display:block;font-size:15px;color:var(--mute);margin-bottom:6px">練習哪些能力（會輪流出現）</span><div class="doms" id="doms"></div></div>
+      <div class="field"><span class="lab" style="display:block;font-size:15px;color:var(--mute);margin-bottom:6px">難度</span><div class="seg" data-k="level"><button data-v="grow">由淺入深</button><button data-v="1">入門</button><button data-v="2">中等</button><button data-v="3">挑戰</button></div></div>
+      <button class="reroll" id="reroll" type="button">換一組題目</button>
+    </section>
+    <section class="sec">
+      <h2>版面</h2>
+      <div class="field"><div class="seg" data-k="format"><button data-v="A5">A5 小冊子（可對摺）</button><button data-v="A4">A4 單頁</button></div></div>
+      <div class="field"><span class="lab" style="display:block;font-size:15px;color:var(--mute);margin-bottom:6px">字的大小</span><div class="seg" data-k="fontScale"><button data-v="1">大</button><button data-v="1.15">特大</button></div></div>
+      <span class="lab" style="display:block;font-size:15px;color:var(--mute);margin-bottom:8px">放進手冊的頁面</span>
+      <div class="checks" id="checks"></div>
+    </section>
+    <section class="sec">
+      <h2>下載</h2>
+      <div class="dl">
+        <button class="main" id="dlPpt" type="button"><b>PowerPoint</b><span>可改字、改顏色、移動位置</span></button>
+        <button id="dlDoc" type="button"><b>Word</b><span>可編輯的文字與表格</span></button>
+        <button id="dlPdf" type="button"><b>PDF 逐頁</b><span>直接列印或傳給家屬</span></button>
+        <button id="dlBook" type="button"><b>PDF 摺頁小冊</b><span>A4 橫印，對摺就成冊</span></button>
+      </div>
+      <p class="tip" id="printTip"></p>
+    </section>
+  </aside>
+
+  <section class="stage" aria-label="手冊預覽">
+    <div class="bar"><h2>預覽</h2><div class="seg" data-k="view"><button data-v="spread">翻書看</button><button data-v="single">一頁一頁看</button></div></div>
+    <div class="spreads" id="preview"></div>
+  </section>
+</main>
+<div class="offscreen" id="off" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+/* ===== 認知手冊生成器 核心：出題、頁面、版面 ===== */
+const K = 0.3528; // pt -> mm
+const LH = 1.45;
+
+function rngOf(seed) {
+  let a = seed >>> 0;
+  const r = () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  r.int = (lo, hi) => lo + Math.floor(r() * (hi - lo + 1));
+  r.pick = arr => arr[Math.floor(r() * arr.length)];
+  r.shuffle = arr => { const b = arr.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  r.sample = (arr, n) => r.shuffle(arr).slice(0, n);
+  return r;
+}
+
+const DOMAINS = {
+  att: { name: '注意力', color: '4C9BE8', soft: 'E6F1FC' },
+  mem: { name: '記憶力', color: 'F0645A', soft: 'FDE9E7' },
+  cal: { name: '計算力', color: 'E89A0C', soft: 'FDF1D9' },
+  ori: { name: '定向感', color: '2FA886', soft: 'E2F5EF' },
+  lan: { name: '語言力', color: '9067D0', soft: 'EFE8FA' },
+  exe: { name: '思考力', color: '2C93AE', soft: 'E1F2F6' },
+};
+const DOMAIN_ORDER = ['att', 'mem', 'cal', 'ori', 'lan', 'exe'];
+
+/* ---------- 題庫 ---------- */
+const CHAR_SETS = [['日', '目', '白', '田'], ['大', '太', '犬', '天'], ['人', '入', '八', '火'], ['土', '士', '王', '工'], ['己', '已', '巴', '包'], ['未', '末', '本', '木'], ['天', '夫', '失', '矢'], ['千', '干', '午', '牛'], ['口', '日', '回', '田'], ['問', '間', '閃', '開'], ['今', '令', '合', '含'], ['王', '玉', '主', '五'], ['甲', '由', '田', '申'], ['鳥', '烏', '島', '馬'], ['住', '往', '注', '柱'], ['貝', '見', '頁', '具'], ['毛', '手', '半', '午'], ['力', '刀', '九', '乃'], ['日', '目', '且', '旦'], ['休', '伙', '伏', '仕'], ['清', '情', '請', '晴'], ['時', '詩', '持', '特'], ['米', '來', '采', '未'], ['羊', '半', '洋', '美'], ['6', '9', '8', '0'], ['3', '8', '5', '2'], ['1', '7', '4', '9']];
+const SYMBOLS = ['○', '△', '□', '☆', '◇', '●', '▲', '■'];
+const WORDS = {
+  水果: ['香蕉', '蘋果', '芭樂', '西瓜', '葡萄', '鳳梨', '橘子', '芒果', '木瓜', '荔枝', '蓮霧', '柳丁', '楊桃', '草莓', '龍眼', '奇異果'],
+  蔬菜: ['高麗菜', '番茄', '茄子', '菠菜', '南瓜', '玉米', '青椒', '洋蔥', '紅蘿蔔', '絲瓜', '竹筍', '苦瓜', '冬瓜', '白蘿蔔', '花椰菜', '空心菜'],
+  動物: ['小狗', '小貓', '老虎', '大象', '兔子', '烏龜', '猴子', '鴨子', '金魚', '長頸鹿', '獅子', '熊貓', '松鼠', '企鵝', '斑馬', '蝴蝶'],
+  家用品: ['毛巾', '牙刷', '雨傘', '剪刀', '枕頭', '時鐘', '鏡子', '電扇', '掃把', '鍋子', '眼鏡', '拖鞋', '茶壺', '棉被', '檯燈', '衣架'],
+  交通工具: ['公車', '火車', '腳踏車', '機車', '計程車', '捷運', '高鐵', '飛機', '輪船', '卡車', '救護車', '消防車'],
+  地名: ['台北', '台中', '高雄', '花蓮', '台南', '宜蘭', '新竹', '苗栗', '桃園', '嘉義', '屏東', '台東', '基隆', '南投', '彰化', '雲林'],
+  花草: ['玫瑰', '菊花', '百合', '蘭花', '向日葵', '桂花', '茉莉', '杜鵑', '櫻花', '荷花', '梅花', '牽牛花'],
+  文具: ['鉛筆', '橡皮擦', '尺', '膠水', '筆記本', '原子筆', '釘書機', '信封', '剪刀', '彩色筆'],
+  衣物: ['外套', '襯衫', '裙子', '帽子', '圍巾', '襪子', '手套', '背心', '雨衣', '睡衣', '毛衣', '皮帶'],
+  點心: ['蛋糕', '湯圓', '粽子', '月餅', '豆花', '餅乾', '饅頭', '包子', '紅豆餅', '麻糬', '布丁', '綠豆湯'],
+  樂器: ['鋼琴', '吉他', '二胡', '笛子', '鼓', '口琴', '小提琴', '喇叭', '鈴鼓', '木魚'],
+  身體: ['眼睛', '鼻子', '耳朵', '嘴巴', '肩膀', '膝蓋', '手肘', '腳趾', '額頭', '下巴', '手腕', '肚子'],
+  職業: ['老師', '醫生', '護理師', '廚師', '郵差', '警察', '司機', '農夫', '理髮師', '消防員', '店員', '工程師'],
+};
+const GOODS = [['雞蛋一盒', 60], ['豆腐', 25], ['青菜一把', 30], ['香蕉一串', 45], ['牛奶一瓶', 55], ['麵包', 35], ['白米一包', 180], ['醬油一瓶', 65], ['豬肉一盒', 120], ['吳郭魚一尾', 90], ['水餃一包', 110], ['茶葉一包', 150], ['肥皂', 30], ['蘋果一顆', 40], ['地瓜一袋', 50], ['鳳梨一顆', 80], ['豆漿一杯', 20], ['饅頭一個', 15], ['雞腿', 70], ['蔥一把', 20], ['蒜頭一包', 40], ['衛生紙一串', 199], ['洗衣精一瓶', 159], ['米粉一包', 45], ['香菇一包', 95], ['花生一包', 60], ['高麗菜一顆', 50], ['番茄一斤', 40], ['蛋捲一盒', 130], ['綠豆一包', 55]];
+const CATS_EASY = [['水果', '香蕉、芭樂、西瓜'], ['動物', '小狗、老虎、兔子'], ['顏色', '紅色、黃色、綠色'], ['早餐吃的東西', '饅頭、豆漿、稀飯'], ['廚房裡的東西', '鍋子、碗、菜刀'], ['蔬菜', '高麗菜、菠菜、茄子'], ['衣服的種類', '外套、襯衫、褲子'], ['臉上的部位', '眼睛、鼻子、嘴巴'], ['飲料', '茶、咖啡、果汁'], ['家裡的家具', '桌子、椅子、床'], ['會游泳的動物', '魚、烏龜、鴨子'], ['交通工具', '公車、火車、機車']];
+const CATS_MID = [['會飛的東西', '小鳥、飛機、蝴蝶'], ['紅色的東西', '番茄、紅包、蘋果'], ['圓形的東西', '時鐘、碗、硬幣'], ['有輪子的東西', '腳踏車、公車、推車'], ['台灣的地名', '台北、花蓮、苗栗'], ['會發出聲音的東西', '電話、鬧鐘、收音機'], ['運動項目', '散步、游泳、太極拳'], ['過年會吃的東西', '年糕、魚、發糕'], ['市場買得到的東西', '青菜、豬肉、雞蛋'], ['需要插電的東西', '電鍋、電扇、電視'], ['冰箱裡會放的東西', '牛奶、雞蛋、青菜'], ['綠色的東西', '青菜、樹葉、西瓜皮'], ['甜的東西', '糖果、蛋糕、蜂蜜'], ['工作的種類', '老師、醫生、廚師']];
+const CATS_HARD = [['「大」開頭的詞', '大家、大象、大門'], ['「水」開頭的詞', '水果、水杯、水餃'], ['「花」開頭的詞', '花園、花瓶、花生'], ['有「心」字的詞', '開心、小心、點心'], ['有「天」字的詞', '天氣、今天、天空'], ['有「人」字的詞', '大人、人生、客人'], ['「白」開頭的詞', '白天、白菜、白雲'], ['有「山」字的詞', '高山、山洞、爬山'], ['有「火」字的詞', '火車、煙火、火鍋'], ['有「手」字的詞', '手錶、洗手、手套'], ['有「家」字的詞', '大家、家人、回家'], ['又硬又冰的東西', '冰塊、冰棒、冷凍肉'], ['比手掌小的東西', '硬幣、鈕扣、鑰匙'], ['要用兩隻手拿的東西', '臉盆、箱子、鍋子']];
+const WORD2 = ['電視', '冰箱', '牙刷', '雨傘', '眼鏡', '枕頭', '筷子', '茶杯', '拖鞋', '時鐘', '報紙', '衣服', '公園', '醫院', '市場', '學校', '車站', '銀行', '郵局', '廚房', '太陽', '月亮', '星星', '白雲', '老師', '朋友', '生日', '早餐', '晚餐', '電話', '窗戶', '桌子', '椅子', '毛巾', '肥皂', '手錶', '帽子', '鞋子', '花園', '水果', '火車', '牛奶', '麵包', '雞蛋', '書包', '鉛筆', '飛機', '天氣', '山洞', '海邊', '風箏', '鑰匙', '馬路', '樓梯', '電梯', '剪刀', '鏡子', '杯子', '碗盤', '醬油'];
+const IDIOMS = ['一石二鳥', '三心二意', '五顏六色', '七上八下', '十全十美', '心想事成', '年年有餘', '笑口常開', '身體健康', '萬事如意', '歡天喜地', '春暖花開', '一帆風順', '半途而廢', '自言自語', '人山人海', '東張西望', '千言萬語', '百發百中', '開門見山', '一心一意', '四面八方', '九牛一毛', '大同小異', '十字路口', '馬到成功', '風和日麗', '山明水秀', '鳥語花香', '一路順風', '大吉大利', '青山綠水', '不知不覺', '有說有笑', '十拿九穩', '日新月異', '三言兩語', '六神無主', '一舉兩得', '入木三分', '對牛彈琴', '畫蛇添足', '守株待兔', '井底之蛙', '亡羊補牢', '如魚得水', '虎頭蛇尾', '雞飛狗跳', '狐假虎威', '龍飛鳳舞'];
+const OPPOSITES = [['大', '小'], ['高', '矮'], ['長', '短'], ['胖', '瘦'], ['快', '慢'], ['冷', '熱'], ['多', '少'], ['上', '下'], ['左', '右'], ['前', '後'], ['開', '關'], ['早', '晚'], ['新', '舊'], ['輕', '重'], ['黑', '白'], ['甜', '苦'], ['遠', '近'], ['深', '淺'], ['乾', '濕'], ['買', '賣'], ['進', '出'], ['哭', '笑'], ['東', '西'], ['南', '北'], ['老', '少'], ['內', '外'], ['軟', '硬'], ['粗', '細'], ['來', '去'], ['真', '假'], ['寬', '窄'], ['厚', '薄']];
+const OPP2 = [['白天', '晚上'], ['開心', '難過'], ['乾淨', '骯髒'], ['安靜', '吵鬧'], ['勤勞', '懶惰'], ['出門', '回家'], ['起床', '睡覺'], ['熱鬧', '冷清'], ['成功', '失敗'], ['簡單', '困難'], ['方便', '麻煩'], ['便宜', '昂貴'], ['年輕', '年老'], ['聰明', '笨拙'], ['勇敢', '膽小'], ['整齊', '凌亂']];
+const MEASURES = [['條', '魚'], ['張', '紙'], ['隻', '狗'], ['把', '雨傘'], ['本', '書'], ['輛', '車'], ['杯', '茶'], ['雙', '鞋子'], ['朵', '花'], ['棵', '樹'], ['件', '衣服'], ['顆', '蘋果'], ['碗', '飯'], ['頂', '帽子'], ['間', '房子'], ['座', '山'], ['封', '信'], ['支', '筆'], ['台', '電視'], ['盒', '雞蛋'], ['頭', '牛'], ['匹', '馬'], ['片', '葉子'], ['塊', '蛋糕'], ['副', '眼鏡'], ['把', '椅子'], ['架', '飛機'], ['首', '歌'], ['位', '老師'], ['串', '葡萄']];
+const ZUCI = ['水', '火', '山', '花', '天', '心', '人', '大', '小', '手', '口', '日', '月', '家', '車', '門', '生', '好', '白', '年', '春', '光', '風', '雨', '中', '長', '金', '東', '學', '電'];
+const CHAIN_START = ['火車', '學生', '花園', '老師', '天空', '電話', '牛奶', '白天', '月亮', '大門', '公園', '雞蛋', '茶葉', '書包', '水果', '冬天', '開心', '早餐'];
+const STEPS = [
+  ['泡茶', ['燒開水', '把茶葉放進茶壺', '倒入熱水', '等一兩分鐘', '倒進杯子裡喝']],
+  ['煮白飯', ['把米洗乾淨', '加入適量的水', '放進電鍋', '按下開關', '開關跳起來後盛飯']],
+  ['寄信', ['把信寫好', '把信裝進信封', '寫上地址', '貼上郵票', '投進郵筒']],
+  ['刷牙', ['擠牙膏', '刷牙齒', '用水漱口', '沖洗牙刷', '把牙刷放回杯子']],
+  ['洗衣服', ['把衣服分深淺', '放進洗衣機', '加入洗衣精', '按下開始', '洗好後拿去晾']],
+  ['打電話', ['拿起電話', '找到電話號碼', '按下號碼', '等對方接起來', '開始說話']],
+  ['出門買菜', ['寫下要買的東西', '帶好錢包和袋子', '走到市場', '挑選需要的菜', '付錢回家']],
+  ['澆花', ['拿出澆水壺', '把水裝滿', '走到花盆旁', '慢慢澆水', '把水壺收好']],
+  ['洗手', ['打開水龍頭', '把手弄濕', '抹上肥皂搓一搓', '用清水沖乾淨', '用毛巾擦乾']],
+  ['搭公車', ['走到公車站', '看站牌等車', '看到公車招手', '上車刷卡', '按鈴準備下車']],
+  ['煎荷包蛋', ['熱鍋倒一點油', '把蛋打進鍋裡', '煎到蛋白變白', '翻面再煎一下', '盛到盤子裡']],
+  ['包水餃', ['拿一張水餃皮', '放進餡料', '把皮對摺', '捏緊邊緣', '放到盤子上']],
+  ['泡麵', ['燒開水', '打開泡麵', '放入調味包', '倒入熱水', '蓋上蓋子等三分鐘']],
+  ['洗碗', ['刮掉剩菜', '擠上洗碗精', '用菜瓜布刷洗', '用清水沖乾淨', '放到碗架上晾乾']],
+  ['種菜', ['把土翻鬆', '撒下種子', '蓋上一層薄土', '輕輕澆水', '每天看看有沒有發芽']],
+  ['晾衣服', ['從洗衣機拿出衣服', '把衣服抖一抖', '套上衣架', '掛到竹竿上', '曬乾後收進來']],
+  ['看醫生', ['帶好健保卡', '到櫃台掛號', '在候診區等叫號', '進診間看醫生', '到櫃台批價']],
+  ['摺被子', ['把棉被攤平', '對摺一次', '再對摺一次', '把邊角拉整齊', '放到床頭']],
+];
+const MATCH_SETS = [
+  ['東西和用途', [['雨傘', '下雨天用'], ['剪刀', '剪東西'], ['掃把', '掃地'], ['牙刷', '刷牙'], ['鍋子', '煮菜'], ['枕頭', '睡覺用'], ['鑰匙', '開門'], ['毛巾', '擦乾'], ['郵票', '寄信'], ['時鐘', '看時間']]],
+  ['動物和叫聲', [['小狗', '汪汪'], ['小貓', '喵喵'], ['牛', '哞哞'], ['公雞', '喔喔'], ['鴨子', '呱呱'], ['羊', '咩咩'], ['青蛙', '呱呱呱'], ['小鳥', '啾啾']]],
+  ['工作和地點', [['老師', '學校'], ['醫生', '醫院'], ['廚師', '廚房'], ['郵差', '郵局'], ['店員', '商店'], ['農夫', '田裡'], ['司機', '車上'], ['理髮師', '理髮店']]],
+  ['節日和食物', [['春節', '年糕'], ['元宵節', '湯圓'], ['端午節', '粽子'], ['中秋節', '月餅'], ['冬至', '湯圓'], ['清明節', '潤餅']]],
+  ['東西和放的地方', [['牛奶', '冰箱'], ['衣服', '衣櫃'], ['書', '書架'], ['碗盤', '碗櫃'], ['鞋子', '鞋櫃'], ['牙刷', '浴室'], ['棉被', '床上'], ['錢', '錢包']]],
+  ['顏色和東西', [['香蕉', '黃色'], ['樹葉', '綠色'], ['天空', '藍色'], ['番茄', '紅色'], ['烏鴉', '黑色'], ['雲朵', '白色'], ['茄子', '紫色'], ['橘子', '橘色']]],
+  ['相關的一對', [['筷子', '碗'], ['牙刷', '牙膏'], ['鞋子', '襪子'], ['筆', '紙'], ['杯子', '茶'], ['鎖', '鑰匙'], ['枕頭', '棉被'], ['針', '線']]],
+];
+const PACK = [
+  ['去游泳', ['泳衣', '泳帽', '毛巾', '蛙鏡'], ['雨傘', '電鍋', '棉被', '鍋鏟']],
+  ['去爬山', ['水壺', '帽子', '運動鞋', '毛巾'], ['拖鞋', '枕頭', '鍋子', '電扇']],
+  ['去看醫生', ['健保卡', '錢包', '口罩', '外套'], ['泳衣', '掃把', '鍋子', '棉被']],
+  ['下雨天出門', ['雨傘', '雨衣', '雨鞋', '鑰匙'], ['扇子', '太陽眼鏡', '泳帽', '電鍋']],
+  ['去市場買菜', ['購物袋', '錢包', '購物清單', '鑰匙'], ['枕頭', '泳衣', '牙刷', '雨鞋']],
+  ['煮一碗麵', ['鍋子', '麵條', '碗', '筷子'], ['牙刷', '雨傘', '拖把', '帽子']],
+  ['出門旅行過夜', ['換洗衣服', '牙刷', '身分證', '充電器'], ['電鍋', '掃把', '花盆', '鍋鏟']],
+  ['寄一個包裹', ['紙箱', '膠帶', '收件地址', '剪刀'], ['泳衣', '枕頭', '雨鞋', '茶葉']],
+  ['冬天出門散步', ['外套', '圍巾', '手套', '帽子'], ['扇子', '泳衣', '涼鞋', '冰塊']],
+  ['去公園運動', ['運動鞋', '水壺', '毛巾', '帽子'], ['棉被', '電鍋', '剪刀', '醬油']],
+];
+const FEST = [['春節', '冬天', ['年糕', '月餅', '粽子', '湯圓']], ['元宵節', '春天', ['湯圓', '粽子', '月餅', '年糕']], ['清明節', '春天', ['潤餅', '月餅', '粽子', '湯圓']], ['端午節', '夏天', ['粽子', '月餅', '湯圓', '年糕']], ['中秋節', '秋天', ['月餅', '粽子', '湯圓', '潤餅']], ['冬至', '冬天', ['湯圓', '粽子', '月餅', '潤餅']], ['重陽節', '秋天', ['重陽糕', '粽子', '湯圓', '潤餅']]];
+const LIFE_Q = ['我家的地址是：', '家裡附近的公車站叫做：', '我常去的醫院或診所是：', '家人的電話號碼是：', '離家最近的便利商店在：', '我平常幾點起床：', '我最常去買菜的地方是：', '里長或鄰長的名字是：', '今天的午餐想吃：', '這個星期有什麼特別的事：', '我最喜歡的電視節目是：', '我住的這個區叫做：'];
+const NAMES = ['王阿姨', '李伯伯', '陳奶奶', '林叔叔', '張阿公', '黃阿嬤', '吳大哥', '劉小姐', '蔡老師', '楊爺爺'];
+const GOODS10 = GOODS.filter(g => g[1] % 10 === 0 && g[1] <= 100);
+const goodsName = g => g[0].replace(/^(.+?)(一.+)$/, '$2$1');
+const PLACES = ['市場', '郵局', '公園', '銀行', '醫院', '超市', '廟口', '活動中心', '圖書館', '早餐店'];
+const WEEK = ['一', '二', '三', '四', '五', '六', '日'];
+
+/* ---------- 不重複抽題 ---------- */
+function makeDecks(r) {
+  const decks = {};
+  const draw = (key, arr) => {
+    let d = decks[key];
+    if (!d || !d.length) { const last = d && d.last; d = decks[key] = r.shuffle(arr.map((_, i) => i)); if (last != null && d.length > 1 && d[d.length - 1] === last) d.unshift(d.pop()); }
+    const i = d.pop(); d.last = i; return arr[i];
+  };
+  const drawN = (key, arr, n) => { const out = [], seen = new Set(); let guard = 0; while (out.length < Math.min(n, arr.length) && guard++ < n * 6) { const v = draw(key, arr), s = JSON.stringify(v); if (!seen.has(s)) { seen.add(s); out.push(v); } } return out; };
+  return { draw, drawN };
+}
+
+/* ---------- 題目產生 ---------- */
+const VARIANTS = {
+  att: ['findChar', 'findNum', 'oddRow', 'symbol', 'order'],
+  mem: ['words', 'story', 'pairs', 'recog'],
+  cal: ['shop', 'serial', 'time', 'coins', 'equation', 'compare'],
+  ori: ['today', 'weekday', 'festival', 'life', 'clock'],
+  lan: ['category', 'fillWord', 'idiom', 'opposite', 'measure', 'zuci', 'chain'],
+  exe: ['pattern', 'steps', 'oddOne', 'match', 'pack', 'shapePat'],
+};
+
+function genTask(dom, lv, r, ctx) {
+  const v = ctx.draw('v_' + dom, VARIANTS[dom]);
+  const S = ctx.small;
+  const T = (title, guide, blocks, answer, extra = {}) => Object.assign({ dom, title, guide, blocks, answer, kind: v }, extra);
+
+  /* 注意力 */
+  if (v === 'findChar') {
+    const set = ctx.draw('charset', CHAR_SETS);
+    const dims = S ? (lv === 1 ? [5, 6] : lv === 2 ? [5, 7] : [6, 6]) : (lv === 1 ? [5, 6] : lv === 2 ? [6, 7] : [7, 8]);
+    const n = dims[0] * dims[1];
+    if (lv < 3) {
+      const tgt = set[0], pool = lv === 1 ? set.slice(1, 3) : set.slice(1);
+      const cnt = Math.round(n * (0.18 + r() * 0.08)), arr = [];
+      for (let i = 0; i < n; i++) arr.push(i < cnt ? tgt : r.pick(pool));
+      return T('找字遊戲', `請用筆把所有的「${tgt}」圈起來，再數一數有幾個。`, [{ type: 'chars', rows: dims[0], cols: dims[1], chars: r.shuffle(arr) }, { type: 'lines', items: [`我找到了 ＿＿＿ 個「${tgt}」`] }], `找字：「${tgt}」共 ${cnt} 個`);
+    }
+    const [a, b] = r.sample(set, 2), pool = set.filter(c => c !== a && c !== b);
+    const ca = Math.round(n * 0.16), cb = Math.round(n * 0.14), arr = [];
+    for (let i = 0; i < n; i++) arr.push(i < ca ? a : i < ca + cb ? b : r.pick(pool));
+    return T('找字遊戲', `請把「${a}」圈起來，把「${b}」打勾，最後各數一數有幾個。`, [{ type: 'chars', rows: dims[0], cols: dims[1], chars: r.shuffle(arr) }, { type: 'lines', items: [`「${a}」有 ＿＿＿ 個　「${b}」有 ＿＿＿ 個`] }], `找字：「${a}」共 ${ca} 個，「${b}」共 ${cb} 個`);
+  }
+  if (v === 'findNum') {
+    const dims = S ? (lv === 1 ? [5, 5] : [5, 6]) : (lv === 1 ? [5, 6] : lv === 2 ? [6, 6] : [6, 7]);
+    const n = dims[0] * dims[1];
+    let a = r.int(1, 9), b = r.int(1, 9); while (a === b) b = r.int(1, 9);
+    const tgt = `${a}${b}`, sims = [`${b}${a}`, `${a}${a}`, `${b}${b}`, `${a}${(b + 1) % 10}`, `${(a + 1) % 10}${b}`].filter(x => x !== tgt && x[0] !== '0');
+    const pool = lv === 1 ? Array.from({ length: 90 }, (_, i) => String(i + 10)).filter(x => x !== tgt) : sims;
+    const cnt = Math.round(n * (0.16 + r() * 0.06)), arr = [];
+    for (let i = 0; i < n; i++) arr.push(i < cnt ? tgt : r.pick(pool));
+    return T('找數字', `請把所有的「${tgt}」圈起來，小心長得很像的數字。`, [{ type: 'chars', rows: dims[0], cols: dims[1], chars: r.shuffle(arr) }, { type: 'lines', items: [`「${tgt}」一共有 ＿＿＿ 個`] }], `找數字：「${tgt}」共 ${cnt} 個`);
+  }
+  if (v === 'oddRow') {
+    const rows = S ? 5 : (lv === 3 ? 6 : 5), cols = S ? 7 : (lv === 1 ? 7 : 8);
+    const chars = [], ans = [];
+    const sets = ctx.drawN('charset', CHAR_SETS, rows);
+    for (let i = 0; i < rows; i++) {
+      const set = sets[i % sets.length], base = set[0], odd = lv === 1 ? set[3] : set[1];
+      const pos = r.int(0, cols - 1);
+      for (let j = 0; j < cols; j++) chars.push(j === pos ? odd : base);
+      ans.push(`第${i + 1}排第${pos + 1}個「${odd}」`);
+    }
+    return T('哪一個不一樣', '每一排都藏著一個不一樣的字，找到就把它圈起來。', [{ type: 'chars', rows, cols, chars }], '哪一個不一樣：' + ans.join('、'));
+  }
+  if (v === 'symbol') {
+    const dims = S ? (lv === 1 ? [5, 6] : [6, 6]) : (lv === 1 ? [5, 7] : lv === 2 ? [6, 7] : [7, 8]);
+    const n = dims[0] * dims[1];
+    const pool = r.sample(SYMBOLS, lv === 1 ? 3 : lv === 2 ? 4 : 5), tgt = pool[0];
+    const cnt = Math.round(n * (0.18 + r() * 0.06)), arr = [];
+    for (let i = 0; i < n; i++) arr.push(i < cnt ? tgt : r.pick(pool.slice(1)));
+    return T('找圖形', `請把所有的「${tgt}」圈起來，再數一數有幾個。`, [{ type: 'chars', rows: dims[0], cols: dims[1], chars: r.shuffle(arr) }, { type: 'lines', items: [`「${tgt}」一共有 ＿＿＿ 個`] }], `找圖形：「${tgt}」共 ${cnt} 個`);
+  }
+  if (v === 'order') {
+    const dims = lv === 1 ? [4, 5] : lv === 2 ? [5, 5] : (S ? [5, 6] : [6, 6]);
+    const n = dims[0] * dims[1];
+    const nums = r.shuffle(Array.from({ length: n }, (_, i) => String(i + 1)));
+    return T('依序找數字', `從 1 開始，依照順序找到 ${n}，找到一個就輕輕打一個勾。可以請家人幫忙看看花了多久。`, [{ type: 'chars', rows: dims[0], cols: dims[1], chars: nums }, { type: 'lines', items: ['今天花了 ＿＿＿ 分鐘'] }], '', { noAnswer: true });
+  }
+
+  /* 記憶力 */
+  if (v === 'words') {
+    const k = S ? (lv === 1 ? 4 : lv === 2 ? 5 : 6) : (lv === 1 ? 4 : lv === 2 ? 6 : 8);
+    const cats = ctx.drawN('memcat', Object.keys(WORDS), lv);
+    let words = [];
+    cats.forEach(c => { words = words.concat(ctx.drawN('w_' + c, WORDS[c], Math.ceil(k / lv))); });
+    words = r.shuffle(words).slice(0, k);
+    ctx.lastMem = words;
+    return T('看詞記憶', '先把下面的詞大聲唸兩遍，用手遮住，再把記得的詞寫下來。', [{ type: 'chips', items: words }, { type: 'blanks', n: k, cols: 2 }], `看詞記憶：${words.join('、')}`, { memWords: words });
+  }
+  if (v === 'recog') {
+    const k = lv === 1 ? 3 : lv === 2 ? 4 : 5, cats = ctx.drawN('memcat', Object.keys(WORDS), 2);
+    const shown = ctx.drawN('w_' + cats[0], WORDS[cats[0]], k);
+    const others = r.sample(WORDS[cats[0]].filter(w => !shown.includes(w)), lv === 1 ? 2 : 3).concat(r.sample(WORDS[cats[1]], lv === 3 ? 3 : 2));
+    ctx.lastMem = shown;
+    return T('剛剛有沒有出現', '先記住第一排的詞，然後用手遮住。第二排裡，剛剛出現過的詞就圈起來。', [{ type: 'chips', label: '先記住', items: shown }, { type: 'chips', label: '圈起來', items: r.shuffle(shown.concat(others)) }], `剛剛有沒有出現：${shown.join('、')}`, { memWords: shown });
+  }
+  if (v === 'story') {
+    const who = ctx.draw('names', NAMES), place = ctx.draw('places', PLACES);
+    const h = r.int(7, 10), item = ctx.draw('goods', GOODS), price = item[1];
+    let friend = ctx.draw('names', NAMES); if (friend === who) friend = ctx.draw('names', NAMES); const wk = r.pick(WEEK);
+    const facts = [`星期${wk}早上 ${h} 點，${who}去${place}`, `買了${goodsName(item)}，花了 ${price} 元`, `回家路上遇到了${friend}`];
+    const qs = ['是誰出門？＿＿＿＿', '去了哪裡？＿＿＿＿', '幾點出門？＿＿＿ 點', '買了什麼？＿＿＿＿', '花了多少錢？＿＿＿ 元', '遇到了誰？＿＿＿＿', '那天是星期幾？＿＿'];
+    const use = lv === 1 ? 2 : lv === 2 ? 3 : 3;
+    const story = facts.slice(0, use).join('，') + '。';
+    const qUse = lv === 1 ? [0, 1, 3] : lv === 2 ? [0, 2, 4, 5] : [6, 1, 2, 4, 5];
+    const ansMap = [who, place, h + ' 點', goodsName(item), price + ' 元', friend, '星期' + wk];
+    const realQ = qUse.filter(i => (i <= 1 || i === 2 || i === 6) || (i <= 4 && use >= 2) || (i === 5 && use >= 3));
+    return T('短文記憶', '把這段話慢慢唸兩遍，用手遮住，再回答下面的問題。', [{ type: 'para', text: story }, { type: 'lines', items: realQ.map(i => qs[i]) }], '短文記憶：' + realQ.map(i => ansMap[i]).join('、'));
+  }
+  if (v === 'pairs') {
+    const k = lv === 1 ? 2 : lv === 2 ? 3 : 4;
+    const ns = ctx.drawN('names', NAMES, k), gs = ctx.drawN('goods', GOODS, k).map(g => g[0].replace(/一.+$/, ''));
+    return T('誰買了什麼', '記住每個人買了什麼，用手遮住，再把答案寫在下面。', [{ type: 'chips', items: ns.map((n, i) => `${n}買${gs[i]}`) }, { type: 'lines', items: r.shuffle(gs.map(g => `${g}是 ＿＿＿＿ 買的`)) }], '誰買了什麼：' + ns.map((n, i) => `${n}－${gs[i]}`).join('、'));
+  }
+
+  /* 計算力 */
+  if (v === 'shop') {
+    const items = lv === 1 ? ctx.drawN('goods10', GOODS10, 2) : ctx.drawN('goods', GOODS, 3);
+    const sum = items.reduce((s, g) => s + g[1], 0);
+    const blocks = [{ type: 'table', head: ['要買的東西', '價錢'], rows: items.map(g => [g[0], g[1] + ' 元']) }];
+    if (lv === 3) {
+      const pay = sum < 500 ? 500 : 1000;
+      blocks.push({ type: 'lines', items: ['一共要付 ＿＿＿＿ 元', `拿 ${pay} 元付錢，要找回 ＿＿＿＿ 元`] });
+      return T('買菜算錢', '幫忙算一算，買下面這些東西要花多少錢？', blocks, `買菜算錢：合計 ${sum} 元，找回 ${pay - sum} 元`);
+    }
+    blocks.push({ type: 'lines', items: ['一共要付 ＿＿＿＿ 元'] });
+    return T('買菜算錢', '幫忙算一算，買下面這些東西要花多少錢？', blocks, `買菜算錢：合計 ${sum} 元`);
+  }
+  if (v === 'serial') {
+    const opts = lv === 1 ? [[r.pick([3, 5, 10, 12, 20]), 5], [r.pick([2, 4, 6, 10]), 2], [r.pick([10, 20, 30]), 10]] : lv === 2 ? [[r.pick([50, 60, 80, 45]), -4], [r.pick([40, 52, 66]), -3], [r.pick([5, 7, 9]), 6]] : [[100, -7], [r.pick([90, 85, 95]), -6], [r.pick([3, 4, 6]), 9]];
+    const [start, step] = r.pick(opts);
+    const seq = [start]; for (let i = 1; i < 7; i++) seq.push(seq[i - 1] + step);
+    return T('連續算數', `從 ${start} 開始，每次${step > 0 ? '加' : '減'} ${Math.abs(step)}，一格一格往下寫。`, [{ type: 'seq', rows: [[String(start), '', '', '', '', '', '']] }], `連續算數：${seq.join('、')}`);
+  }
+  if (v === 'time') {
+    const pad = m => (m < 10 ? '0' : '') + m;
+    const make = () => {
+      const t = r.int(0, 3);
+      if (t === 0) { const h = r.int(7, 10), m = lv === 1 ? 0 : r.pick([10, 15, 20, 30]), d = lv === 1 ? 30 : r.pick([25, 35, 40, 45]); const tot = h * 60 + m + d; return [`早上 ${h} 點${m ? ' ' + m + ' 分' : ''}出門，走了 ${d} 分鐘到${r.pick(PLACES)}，到的時候是幾點幾分？`, `${Math.floor(tot / 60)}:${pad(tot % 60)}`]; }
+      if (t === 1) { const h = r.int(7, 9), h2 = r.int(5, 9); return [`${r.pick(['超市', '圖書館', '郵局', '活動中心'])}早上 ${h} 點開門，晚上 ${h2} 點關門，一天開幾個小時？`, `${h2 + 12 - h} 小時`]; }
+      if (t === 2) { const h = r.int(4, 6), m = r.pick([0, 15, 30, 40]), d = r.pick([30, 40, 45]); const tot = h * 60 + m + d; return [`電鍋煮飯要 ${d} 分鐘，下午 ${h} 點${m ? ' ' + m + ' 分' : ''}按下開關，幾點幾分煮好？`, `${Math.floor(tot / 60)}:${pad(tot % 60)}`]; }
+      const h = r.int(1, 4), d = r.pick([10, 15, 20, 30]); const tot = h * 60 - d; return [`下午 ${h} 點要看醫生，想提早 ${d} 分鐘到，要幾點幾分到？`, `${Math.floor(tot / 60)}:${pad(tot % 60)}`];
+    };
+    const qs = Array.from({ length: lv === 1 ? 1 : 2 }, make);
+    return T('時間算一算', '想一想生活中的時間，把答案寫在線上。', [{ type: 'lines', items: qs.flatMap((q, i) => [{ t: `${i + 1}. ${q[0]}`, q: 1 }, '　　答：＿＿＿＿＿＿']) }], '時間算一算：' + qs.map(q => q[1]).join('；'));
+  }
+  if (v === 'coins') {
+    const coins = lv === 1 ? [10, 1] : lv === 2 ? [50, 10, 5, 1] : [100, 50, 10, 5, 1];
+    const amt = lv === 1 ? r.int(12, 49) : lv === 2 ? r.int(56, 99) : r.int(126, 299);
+    let rest = amt; const cnt = coins.map(c => { const k = Math.floor(rest / c); rest -= k * c; return k; });
+    return T('湊錢遊戲', `要付 ${amt} 元，用最少的錢幣（鈔票）湊出來，每一種各要幾個？`, [{ type: 'table', head: ['錢幣', '要幾個'], rows: coins.map(c => [c + ' 元', '＿＿ 個']) }], `湊錢遊戲：${coins.map((c, i) => `${c} 元 ${cnt[i]} 個`).join('、')}`);
+  }
+  if (v === 'equation') {
+    const make = () => {
+      if (lv === 1) { const a = r.int(2, 12), b = r.int(2, 8); return [`${a} ＋（　）＝ ${a + b}`, b]; }
+      if (lv === 2) { const t = r.int(0, 1); if (t) { const a = r.int(20, 60), b = r.int(5, 30); return [`${a} ＋（　）＝ ${a + b}`, b]; } const a = r.int(40, 90), b = r.int(5, 35); return [`${a} －（　）＝ ${a - b}`, b]; }
+      const t = r.int(0, 2); if (t === 0) { const a = r.int(2, 9), b = r.int(2, 9); return [`${a} ×（　）＝ ${a * b}`, b]; } if (t === 1) { const a = r.int(50, 99), b = r.int(15, 45); return [`（　）－ ${b} ＝ ${a - b}`, a]; } const a = r.int(3, 9), b = r.int(2, 9); return [`（　）÷ ${a} ＝ ${b}`, a * b];
+    };
+    const qs = Array.from({ length: 4 }, make);
+    return T('算式填空', '括號裡該填哪個數字？想一想再寫進去。', [{ type: 'grid2', items: qs.map(q => q[0]) }], '算式填空：' + qs.map(q => q[1]).join('、'));
+  }
+  if (v === 'compare') {
+    const it = ctx.draw('goods', GOODS)[0].replace(/一.+$/, '');
+    const unit = lv === 1 ? r.pick([10, 20]) : r.pick([12, 15, 25]);
+    const n = lv === 1 ? 2 : 3, a = unit * n - (lv === 1 ? 5 : r.pick([3, 6, 9])), b = unit;
+    const cheaper = a / n < b ? 'A 店' : 'B 店';
+    const rows = [['A 店', `${it} ${n} 份 ${a} 元`], ['B 店', `${it} 1 份 ${b} 元`]];
+    const qs = [`哪一家比較便宜？ ＿＿＿＿`, `在 B 店買 ${n} 份要 ＿＿＿ 元`];
+    if (lv === 3) qs.push(`買 ${n} 份，便宜的那家可以省 ＿＿＿ 元`);
+    return T('哪家比較划算', '看看兩家店的價錢，算一算哪一家比較便宜。', [{ type: 'table', head: ['店家', '價錢'], rows }, { type: 'lines', items: qs }], `哪家比較划算：${cheaper}；B 店 ${n} 份 ${b * n} 元${lv === 3 ? `；省 ${Math.abs(b * n - a)} 元` : ''}`);
+  }
+
+  /* 定向感 */
+  if (v === 'today') {
+    const choices = [{ label: '現在是', opts: ['早上', '中午', '下午', '晚上'] }, { label: '現在的季節', opts: ['春天', '夏天', '秋天', '冬天'] }];
+    if (lv >= 2) choices.push({ label: '今天的天氣', opts: ['晴天', '陰天', '下雨'] });
+    const tail = ['我現在在 ＿＿＿＿＿＿＿＿（地點）'];
+    if (lv === 2) tail.push('再過三天是星期 ＿＿＿');
+    if (lv === 3) tail.push('上個月是 ＿＿ 月，下個月是 ＿＿ 月');
+    return T('今天的我', '看看月曆、時鐘或窗外，把今天的情形寫下來或圈起來。', [{ type: 'lines', items: ['今天是 ＿＿＿ 年 ＿＿＿ 月 ＿＿＿ 日', '今天是星期 ＿＿＿'] }, { type: 'choices', items: choices }, { type: 'lines', items: tail }], '', { noAnswer: true, ori: true });
+  }
+  if (v === 'weekday') {
+    const d = r.int(0, 6), W2 = i => '星期' + WEEK[((i % 7) + 7) % 7];
+    const qs = [['明天是', 1], ['後天是', 2], ['昨天是', -1]];
+    if (lv >= 2) qs.push(['前天是', -2], ['再過 5 天是', 5]);
+    if (lv === 3) qs.push(['再過 10 天是', 10], ['兩個星期後的今天是', 14]);
+    const use = r.sample(qs, lv === 1 ? 3 : 4);
+    return T('星期推一推', `假設今天是星期${WEEK[d]}，想一想下面各是星期幾？`, [{ type: 'lines', items: use.map(q => `${q[0]}星期 ＿＿`) }], '星期推一推：' + use.map(q => `${q[0]}${W2(d + q[1])}`).join('、'));
+  }
+  if (v === 'festival') {
+    const fs = ctx.drawN('fest', FEST, lv === 1 ? 1 : 2);
+    const items = [], ans = [];
+    fs.forEach(f => { items.push({ label: `${f[0]}在什麼季節`, opts: ['春天', '夏天', '秋天', '冬天'] }); ans.push(`${f[0]}${f[1]}`); items.push({ label: `${f[0]}常吃`, opts: r.shuffle(f[2]) }); ans.push(f[2][0]); });
+    if (lv === 3) { items.push({ label: '一年有幾個月', opts: ['10 個', '12 個', '24 個'] }); ans.push('12 個'); }
+    return T('節日與季節', '想一想這些節日的季節和應景食物，把答案圈起來。', [{ type: 'choices', items }], '節日與季節：' + ans.join('、'));
+  }
+  if (v === 'life') {
+    const qs = ctx.drawN('life', LIFE_Q, lv === 1 ? 3 : 4);
+    return T('我的生活', '想一想自己的生活，把答案寫下來。想不起來可以問問家人。', [{ type: 'lines', items: qs.flatMap(q => [{ t: q, q: 1 }, '　＿＿＿＿＿＿＿＿＿＿']) }], '', { noAnswer: true });
+  }
+  if (v === 'clock') {
+    const make = () => { const h = r.int(1, 12), m = lv === 1 ? r.pick([0, 30]) : r.pick([0, 15, 30, 45, 10, 20, 40, 50]); const mm = m / 5 || 12; return [`短針指著 ${m === 0 ? h : h + (m >= 30 ? ' 和 ' + (h % 12 + 1) + ' 中間' : ' 過一點點')}，長針指著 ${mm}，現在是幾點幾分？`, `${h} 點${m ? ' ' + m + ' 分' : '整'}`]; };
+    const qs = Array.from({ length: lv === 1 ? 2 : 3 }, make);
+    return T('看時鐘', '想像一個時鐘，長針指分鐘、短針指小時，把時間寫出來。', [{ type: 'lines', items: qs.flatMap((q, i) => [{ t: `${i + 1}. ${q[0]}`, q: 1 }, '　　答：＿＿ 點 ＿＿ 分']) }], '看時鐘：' + qs.map(q => q[1]).join('、'));
+  }
+
+  /* 語言力 */
+  if (v === 'category') {
+    const [cat, eg] = ctx.draw('cat' + lv, lv === 1 ? CATS_EASY : lv === 2 ? CATS_MID : CATS_HARD);
+    const k = lv === 1 ? 4 : 6;
+    return T('想一想、寫一寫', `請寫出 ${k} 個「${cat.replace(/「|」/g, '')}」。想不出來可以說出來，請家人幫忙寫。`, [{ type: 'blanks', n: k, cols: 2 }], `想一想：${cat}，合理即可（例如：${eg}）`);
+  }
+  if (v === 'fillWord') {
+    const ws = ctx.drawN('word2', WORD2, 6), miss = ws.map(() => r.int(0, 1));
+    const items = ws.map((w, i) => miss[i] === 0 ? '（　）' + w[1] : w[0] + '（　）');
+    const blocks = [];
+    if (lv === 1) blocks.push({ type: 'chips', label: '提示字', items: r.shuffle(ws.map((w, i) => w[miss[i]])) });
+    blocks.push({ type: 'grid2', items });
+    return T('補字成詞', lv === 1 ? '從提示字裡挑一個字，填進括號，變成常用的詞。' : '在括號裡填一個字，變成常用的詞。', blocks, `補字成詞：${ws.join('、')}`);
+  }
+  if (v === 'idiom') {
+    const ws = ctx.drawN('idiom', IDIOMS, lv === 1 ? 4 : 6);
+    const holes = lv === 1 ? 1 : 2;
+    const items = ws.map(w => { const p = r.int(0, 4 - holes); return w.split('').map((c, i) => (i >= p && i < p + holes) ? '（　）' : c).join(''); });
+    const blocks = [];
+    if (lv === 1) blocks.push({ type: 'chips', label: '提示字', items: r.shuffle(ws.map((w, i) => { const it = items[i]; return w[it.indexOf('（')]; })) });
+    blocks.push({ type: 'grid2', items });
+    return T('成語補字', `每個成語少了${holes === 1 ? '一個' : '兩個'}字，請把它們填回去。`, blocks, `成語補字：${ws.join('、')}`);
+  }
+  if (v === 'opposite') {
+    const src = lv === 3 ? OPP2 : OPPOSITES, k = lv === 1 ? 4 : 6;
+    const ps = ctx.drawN('opp' + (lv === 3 ? 2 : 1), src, k).map(p => r() < 0.5 ? p : [p[1], p[0]]);
+    return T('相反詞', '每個詞都有意思相反的詞，請把它寫在括號裡。', [{ type: 'grid2', items: ps.map(p => `${p[0]} ↔（　　）`) }], '相反詞：' + ps.map(p => `${p[0]}－${p[1]}`).join('、'));
+  }
+  if (v === 'measure') {
+    const k = lv === 1 ? 4 : 6, ms = ctx.drawN('measure', MEASURES, k);
+    const blocks = [];
+    if (lv < 3) blocks.push({ type: 'chips', label: '提示字', items: r.shuffle(ms.map(m => m[0])) });
+    blocks.push({ type: 'grid2', items: ms.map(m => `一（　）${m[1]}`) });
+    return T('量詞填填看', '我們會說「一條魚」、「一本書」，請在括號裡填上合適的字。', blocks, '量詞填填看：' + ms.map(m => `一${m[0]}${m[1]}`).join('、'));
+  }
+  if (v === 'zuci') {
+    const ch = ctx.draw('zuci', ZUCI), k = lv === 1 ? 3 : lv === 2 ? 4 : 6;
+    return T('一字變多詞', `用「${ch}」這個字，組出 ${k} 個不一樣的詞，「${ch}」可以放在前面或後面。`, [{ type: 'blanks', n: k, cols: 2 }], `一字變多詞：用「${ch}」組詞，合理即可`);
+  }
+  if (v === 'chain') {
+    const st = ctx.draw('chain', CHAIN_START), k = lv === 1 ? 3 : lv === 2 ? 4 : 5;
+    return T('詞語接龍', `從「${st}」開始，用上一個詞的最後一個字當開頭，接出新的詞。例如：火車 → 車站 → 站牌。`, [{ type: 'seq', rows: [[st].concat(Array(k).fill(''))] }], `詞語接龍：從「${st}」開始，合理即可`);
+  }
+
+  /* 思考力 */
+  if (v === 'pattern') {
+    const pool = lv === 1 ? [
+      () => { const s = r.int(1, 5) * 2; return [0, 1, 2, 3, 4, 5].map(i => s + 2 * i); },
+      () => { const s = r.pick([5, 10, 15]); return [0, 1, 2, 3, 4, 5].map(i => s + 5 * i); },
+      () => { const s = r.pick([10, 20, 30]); return [0, 1, 2, 3, 4, 5].map(i => s + 10 * i); },
+      () => { const s = r.int(30, 40); return [0, 1, 2, 3, 4, 5].map(i => s - i); },
+      () => { const s = r.int(1, 3); return [0, 1, 2, 3, 4, 5].map(i => s + 3 * i); },
+      () => { const s = r.int(50, 60); return [0, 1, 2, 3, 4, 5].map(i => s - 2 * i); },
+    ] : lv === 2 ? [
+      () => { const s = r.pick([1, 2, 3]); return [0, 1, 2, 3, 4, 5].map(i => s * 2 ** i); },
+      () => { const s = r.int(40, 60); return [0, 1, 2, 3, 4, 5].map(i => s - 3 * i); },
+      () => { let a = r.int(1, 3); const o = [a]; for (let i = 1; i < 6; i++) { a += i; o.push(a); } return o; },
+      () => { const s = r.pick([3, 4, 6]); return [1, 2, 3, 4, 5, 6].map(i => s * i); },
+      () => { const s = r.int(80, 100); return [0, 1, 2, 3, 4, 5].map(i => s - 5 * i); },
+      () => [1, 4, 9, 16, 25, 36],
+    ] : [
+      () => { const o = []; for (let i = 1; i <= 4; i++) o.push(i, i * 10); return o; },
+      () => { let a = r.int(1, 5); const o = [a]; for (let i = 1; i < 7; i++) { a += i % 2 ? 2 : 3; o.push(a); } return o; },
+      () => { const o = []; for (let i = 0; i < 4; i++) o.push(2 + i * 2, 20 - i * 3); return o; },
+      () => { let a = r.int(2, 4); const o = [a]; for (let i = 1; i < 7; i++) { a = i % 2 ? a * 2 : a - 1; o.push(a); } return o; },
+      () => { const o = [1, 1]; while (o.length < 8) o.push(o[o.length - 1] + o[o.length - 2]); return o; },
+      () => { const o = []; for (let i = 0; i < 4; i++) o.push(100 - i * 10, i + 1); return o; },
+    ];
+    const seqs = ctx.drawN('pat' + lv, pool, lv === 1 ? 2 : 3).map(f => f());
+    return T('找規律', '每一排數字都有規律，想一想，把空格填完。', [{ type: 'seq', rows: seqs.map(s => s.map((n, i) => i >= s.length - 2 ? '' : String(n))) }], '找規律：' + seqs.map(s => s.slice(-2).join('、')).join('；'));
+  }
+  if (v === 'shapePat') {
+    const sy = r.sample(SYMBOLS.slice(0, 5), 4);
+    const pats = lv === 1 ? [[0, 1], [0, 0, 1], [0, 1, 1]] : lv === 2 ? [[0, 1, 2], [0, 0, 1, 1], [0, 1, 0, 2]] : [[0, 1, 2, 3], [0, 1, 1, 2, 2, 2], [0, 1, 2, 1]];
+    const rows = [], ans = [];
+    r.sample(pats, 2).forEach(p => { const len = 8, s = Array.from({ length: len }, (_, i) => sy[p[i % p.length]]); rows.push(s.map((x, i) => i >= len - 2 ? '' : x)); ans.push(s.slice(-2).join('')); });
+    return T('圖形規律', '看看圖形是怎麼排的，把最後兩格畫出來。', [{ type: 'seq', rows }], '圖形規律：' + ans.join('；'));
+  }
+  if (v === 'steps') {
+    const [name, steps] = ctx.draw('steps', STEPS);
+    const idx = lv === 1 ? [0, 2, 4] : lv === 2 ? [0, 1, 3, 4] : [0, 1, 2, 3, 4];
+    const chosen = idx.map(i => steps[i]);
+    let sh = r.shuffle(chosen), guard = 0;
+    while (sh.join() === chosen.join() && guard++ < 10) sh = r.shuffle(chosen);
+    return T('排排順序', `「${name}」的步驟被打亂了，請在方框裡寫上 1、2、3……排出正確順序。`, [{ type: 'steps', items: sh }], `排排順序（${name}）：` + chosen.join(' → '));
+  }
+  if (v === 'oddOne') {
+    const k = lv === 1 ? 3 : 4, items = [], ans = [];
+    const cats = Object.keys(WORDS).filter(c => c !== '地名');
+    for (let i = 0; i < k; i++) {
+      const [a, b] = ctx.drawN('oddcat', cats, 2);
+      const same = r.sample(WORDS[a], lv === 3 ? 4 : 3), odd = r.pick(WORDS[b].filter(w => !WORDS[a].includes(w)));
+      items.push({ label: String(i + 1), opts: r.shuffle(same.concat(odd)) }); ans.push(odd);
+    }
+    return T('哪一個不同類', '每一排有一個詞跟其他的不是同一類，把它圈起來，也可以說說看為什麼。', [{ type: 'choices', items }], '哪一個不同類：' + ans.join('、'));
+  }
+  if (v === 'match') {
+    const [name, pairs] = ctx.draw('match', MATCH_SETS);
+    const k = lv === 1 ? 3 : lv === 2 ? 4 : 5, ps = r.sample(pairs, k);
+    const tags = ['甲', '乙', '丙', '丁', '戊'], right = r.shuffle(ps.map(p => p[1]));
+    return T('配對看看', `把左邊和右邊配對（${name}），在括號裡寫上甲、乙、丙……`, [{ type: 'match', left: ps.map(p => p[0]), right: right.map((x, i) => `${tags[i]}　${x}`) }], '配對看看：' + ps.map(p => `${p[0]}－${tags[right.indexOf(p[1])]}`).join('、'));
+  }
+  if (v === 'pack') {
+    const [name, yes, no] = ctx.draw('pack', PACK);
+    const y = r.sample(yes, lv === 1 ? 3 : 4), n = r.sample(no, lv === 1 ? 2 : lv === 2 ? 3 : 4);
+    return T('出門前想一想', `準備「${name}」，下面哪些東西用得到？把它們圈起來。`, [{ type: 'chips', items: r.shuffle(y.concat(n)) }, { type: 'lines', items: ['還想多帶什麼？＿＿＿＿＿＿＿＿'] }], `出門前想一想（${name}）：${y.join('、')}`);
+  }
+  return T('', '', [], '');
+}
+
+/* ---------- 建立整本手冊 ---------- */
+function levelFor(mode, d, days) {
+  if (mode !== 'grow') return +mode;
+  const p = days <= 1 ? 0 : d / (days - 1);
+  return p < 0.34 ? 1 : p < 0.67 ? 2 : 3;
+}
+
+function buildBook(opt) {
+  const r = rngOf(opt.seed);
+  const doms = DOMAIN_ORDER.filter(d => opt.domains.includes(d));
+  const k = Math.min(opt.perDay, doms.length);
+  const ctx = Object.assign({ lastMem: null, small: opt.format !== 'A4' }, makeDecks(r));
+  const days = [];
+  let rot = r.int(0, doms.length - 1);
+  for (let d = 0; d < opt.days; d++) {
+    const lv = levelFor(opt.level, d, opt.days);
+    const todays = [];
+    for (let j = 0; j < k; j++) { todays.push(doms[rot % doms.length]); rot++; }
+    const recall = opt.recall && ctx.lastMem ? ctx.lastMem : null;
+    ctx.lastMem = null;
+    const tasks = todays.map(dom => genTask(dom, lv, r, ctx));
+    days.push({ n: d + 1, week: Math.floor(d / 7) + 1, lv, tasks, recall });
+  }
+  const pages = [];
+  const inc = opt.include;
+  if (inc.cover) pages.push({ kind: 'cover' });
+  if (inc.guide) pages.push({ kind: 'guide' });
+  if (inc.toc) pages.push({ kind: 'toc' });
+  if (inc.record) pages.push({ kind: 'record' });
+  const weeks = Math.ceil(opt.days / 7);
+  days.forEach(day => {
+    pages.push({ kind: 'day', day });
+    const endOfWeek = day.n % 7 === 0 || day.n === opt.days;
+    if (inc.review && endOfWeek && opt.days >= 7) pages.push({ kind: 'review', week: day.week });
+  });
+  if (inc.answers) {
+    const lines = [];
+    days.forEach(day => {
+      const ans = day.tasks.filter(t => !t.noAnswer).map(t => t.answer);
+      if (day.recall) ans.unshift('回想昨天：' + day.recall.join('、'));
+      if (ans.length) lines.push({ day: day.n, items: ans });
+    });
+    pages.push({ kind: 'answers', lines });
+  }
+  if (inc.cert) pages.push({ kind: 'cert' });
+  return { opt, days, pages, weeks };
+}
+
+/* ---------- 版面 ---------- */
+function geom(opt) {
+  const fs = opt.fontScale || 1;
+  if (opt.format === 'A4') return { W: 210, H: 297, M: 15, body: 18 * fs, cell: 18, fmt: 'A4' };
+  return { W: 148, H: 210, M: 11, body: 13.5 * fs, cell: 13.5, fmt: 'A5' };
+}
+function units(s) { let u = 0; for (const ch of s) u += ch.charCodeAt(0) < 256 ? 0.56 : 1; return u; }
+function textH(txt, pt, w) {
+  const sz = pt * K; let lines = 0;
+  String(txt).split('\n').forEach(l => { lines += Math.max(1, Math.ceil(units(l) * sz / (w * 0.985))); });
+  return lines * sz * LH;
+}
+
+const C = { ink: '2E2B36', mute: '7A7486', line: 'BDB6AA', paper: 'FFF7E8', sun: 'FFC93C', coral: 'F0645A', mint: '2FA886', sky: '4C9BE8', grape: '9067D0' };
+
+function Lay(G) {
+  const items = [];
+  const api = {
+    items,
+    T(x, y, w, txt, pt, o = {}) { const h = o.h || textH(txt, pt, w); items.push({ t: 'text', x, y, w, h, txt: String(txt), pt, b: !!o.b, c: o.c || C.ink, al: o.al || 'left', va: o.va || 'top', font: o.font || 'body' }); return h; },
+    R(x, y, w, h, o = {}) { items.push({ t: 'rect', x, y, w, h, fill: o.fill || null, line: o.line || null, lw: o.lw || 0.4, r: o.r || 0, dash: !!o.dash }); },
+    E(x, y, w, h, o = {}) { items.push({ t: 'ellipse', x, y, w, h, fill: o.fill || null, line: o.line || null, lw: o.lw || 0.4 }); },
+    L(x, y, x2, y2, o = {}) { items.push({ t: 'line', x, y, x2, y2, c: o.c || C.line, lw: o.lw || 0.4, dash: !!o.dash }); },
+  };
+  return api;
+}
+
+// 區塊排版；回傳高度
+function layBlock(Lr, b, x, y, w, G, f) {
+  const ff = f >= 0.8 ? 1 : Math.max(0.86, f + 0.18), bp = G.body * ff, lh = bp * K * LH, sf = Math.max(0.72, f);
+  if (b.type === 'chars') {
+    const cell = Math.min(w / b.cols, G.cell * 1.2 * f);
+    const gw = cell * b.cols, x0 = x + (w - gw) / 2;
+    Lr.R(x0, y, gw, cell * b.rows, { fill: 'FFFFFF', line: C.line, lw: 0.5, r: 1.5 });
+    b.chars.forEach((ch, i) => {
+      const cx = x0 + (i % b.cols) * cell, cy = y + Math.floor(i / b.cols) * cell;
+      if (i % b.cols) Lr.L(cx, cy, cx, cy + cell, { c: 'E2DCD1', lw: 0.3 });
+      if (Math.floor(i / b.cols) && i % b.cols === 0) Lr.L(x0, cy, x0 + gw, cy, { c: 'E2DCD1', lw: 0.3 });
+      Lr.T(cx, cy, cell, ch, cell * 0.6 / K, { h: cell, al: 'center', va: 'middle', font: 'body' });
+    });
+    return cell * b.rows + 2.5;
+  }
+  if (b.type === 'chips') {
+    let cx = x, cy = y; const ch = bp * K * 1.9, gap = 2.6, pad = bp * K * 0.9;
+    if (b.label) { const lw2 = units(b.label + '：') * bp * 0.85 * K + 1; Lr.T(cx, cy, lw2 + 2, b.label + '：', bp * 0.85, { h: ch, va: 'middle', c: C.mute }); cx += lw2 + 2; }
+    b.items.forEach(it => {
+      const cw = units(it) * bp * 1.05 * K + pad * 2;
+      if (cx + cw > x + w) { cx = x + (b.label ? units(b.label + '：') * bp * 0.85 * K + 3 : 0); cy += ch + gap; }
+      Lr.R(cx, cy, cw, ch, { fill: C.paper, line: 'E9D9B8', lw: 0.4, r: ch / 2 });
+      Lr.T(cx, cy, cw, it, bp * 1.05, { h: ch, al: 'center', va: 'middle', b: true });
+      cx += cw + gap;
+    });
+    return cy + ch - y + 3;
+  }
+  if (b.type === 'blanks') {
+    const cols = b.cols || 1, rows = Math.ceil(b.n / cols), rh = bp * K * 2.25 * sf, cw = w / cols;
+    for (let i = 0; i < b.n; i++) {
+      const cx = x + (i % cols) * cw, cy = y + Math.floor(i / cols) * rh;
+      const nw = units(String(i + 1) + '.') * bp * K + 1.5;
+      Lr.T(cx, cy + rh - lh - 0.6, nw + 1, (i + 1) + '.', bp * 0.9, { c: C.mute });
+      Lr.L(cx + nw + 1, cy + rh - 0.8, cx + cw - 4, cy + rh - 0.8, { c: '9E968A', lw: 0.4 });
+    }
+    return rows * rh + 2;
+  }
+  if (b.type === 'lines') {
+    const rh = Math.max(lh, bp * K * 2.1 * sf); let h = 0;
+    b.items.forEach(it => {
+      const s = typeof it === 'string' ? it : it.t, th = textH(s, bp, w);
+      if (typeof it === 'object' && it.q) { Lr.T(x, y + h + 1, w, s, bp); h += th + 1.5; return; }
+      Lr.T(x, y + h + (rh - lh) / 2, w, s, bp); h += Math.max(rh, th + 1);
+    });
+    return h + 1;
+  }
+  if (b.type === 'choices') {
+    const rh = Math.max(lh, bp * K * 2.1 * sf); let h = 0; const d = bp * K * 0.85;
+    b.items.forEach(row => {
+      const lw2 = units(row.label + '：') * bp * K + 1;
+      Lr.T(x, y + h + (rh - lh) / 2, lw2 + 2, row.label + '：', bp);
+      let cx = x + lw2 + 2;
+      row.opts.forEach(o => {
+        Lr.E(cx, y + h + (rh - d) / 2, d, d, { line: C.ink, lw: 0.45 });
+        const ow = units(o) * bp * K + 1;
+        Lr.T(cx + d + 1.2, y + h + (rh - lh) / 2, ow + 1, o, bp);
+        cx += d + ow + 5;
+      });
+      h += rh;
+    });
+    return h + 1;
+  }
+  if (b.type === 'table') {
+    const tw = Math.min(w, G.fmt === 'A4' ? 130 : 100), x0 = x, rh = Math.max(lh, bp * K * 2.0 * sf), c1 = tw * 0.62;
+    const all = [b.head].concat(b.rows);
+    Lr.R(x0, y, tw, rh, { fill: 'FDF1D9' });
+    all.forEach((row, i) => {
+      const cy = y + i * rh;
+      Lr.T(x0 + 3, cy, c1 - 4, row[0], bp, { h: rh, va: 'middle', b: i === 0 });
+      Lr.T(x0 + c1, cy, tw - c1 - 3, row[1], bp, { h: rh, va: 'middle', al: 'right', b: i === 0 });
+      if (i) Lr.L(x0, cy, x0 + tw, cy, { c: 'E2DCD1', lw: 0.3 });
+    });
+    Lr.L(x0 + c1, y, x0 + c1, y + all.length * rh, { c: 'E2DCD1', lw: 0.3 });
+    Lr.R(x0, y, tw, all.length * rh, { line: C.line, lw: 0.5, r: 1.5 });
+    return all.length * rh + 2.5;
+  }
+  if (b.type === 'seq') {
+    let h = 0;
+    b.rows.forEach(row => {
+      const gap = 2, bw = Math.min((w - gap * (row.length - 1)) / row.length, bp * K * 3.4 * f + 2);
+      row.forEach((v, i) => {
+        const bx = x + i * (bw + gap);
+        Lr.R(bx, y + h, bw, bw * 0.85, { fill: v ? 'FFFFFF' : null, line: v ? C.line : '6E8FA6', lw: v ? 0.45 : 0.6, r: 1.5, dash: !v });
+        if (v) Lr.T(bx, y + h, bw, v, bp * 1.1, { h: bw * 0.85, al: 'center', va: 'middle', b: true });
+      });
+      h += bw * 0.85 + 3;
+    });
+    return h;
+  }
+  if (b.type === 'steps') {
+    const rh = Math.max(lh, bp * K * 2.25 * sf), bs = bp * K * 1.55; let h = 0;
+    b.items.forEach(s => {
+      Lr.R(x, y + h + (rh - bs) / 2, bs, bs, { line: C.ink, lw: 0.5, r: 1 });
+      Lr.T(x + bs + 3, y + h + (rh - lh) / 2, w - bs - 3, s, bp);
+      h += rh;
+    });
+    return h + 1;
+  }
+  if (b.type === 'para') {
+    const pp = bp * 1.05, h = textH(b.text, pp, w - 8) + 6;
+    Lr.R(x, y, w, h, { fill: 'FFFFFF', line: C.line, lw: 0.45, r: 2 });
+    Lr.T(x + 4, y + 3, w - 8, b.text, pp, { b: true });
+    return h + 2;
+  }
+  if (b.type === 'match') {
+    const rh = Math.max(lh * 1.05, bp * K * 2.2 * sf), cw = w / 2, bs = bp * K * 1.5;
+    const n = Math.max(b.left.length, b.right.length);
+    for (let i = 0; i < n; i++) {
+      const cy = y + i * rh;
+      if (b.left[i]) { Lr.T(x, cy + (rh - lh) / 2, cw - bs - 6, `${i + 1}. ${b.left[i]}`, bp, { b: true }); Lr.R(x + cw - bs - 6, cy + (rh - bs) / 2, bs * 1.6, bs, { line: C.ink, lw: 0.45, r: 1 }); }
+      if (b.right[i]) Lr.T(x + cw + 2, cy + (rh - lh) / 2, cw - 2, b.right[i], bp);
+    }
+    return n * rh + 1;
+  }
+  if (b.type === 'grid2') {
+    const rh = Math.max(lh * 1.15, bp * K * 2.3 * sf), cw = w / 2; let h = 0;
+    b.items.forEach((s, i) => {
+      const cx = x + (i % 2) * cw, cy = y + Math.floor(i / 2) * rh;
+      Lr.T(cx, cy + (rh - lh * 1.1) / 2, cw - 2, s, bp * 1.1, { b: true });
+    });
+    return Math.ceil(b.items.length / 2) * rh + 1;
+  }
+  return 0;
+}
+
+function pill(Lr, x, y, txt, pt, fill, color) {
+  const h = pt * K * 1.75, w = units(txt) * pt * K + pt * K * 1.6;
+  Lr.R(x, y, w, h, { fill, r: h / 2 });
+  Lr.T(x, y, w, txt, pt, { h, al: 'center', va: 'middle', b: true, c: color || 'FFFFFF' });
+  return [w, h];
+}
+
+function footer(Lr, G, pageNo) {
+  const { W, H, M } = G; const bp = G.body;
+  if (pageNo) Lr.T(0, H - M + 1.5, W, String(pageNo), bp * 0.75, { al: 'center', c: C.mute });
+}
+
+function layoutDay(page, G, f) {
+  const Lr = Lay(G); const { W, H, M } = G; const day = page.day;
+  const bp = G.body; const x = M, w = W - 2 * M;
+  let y = M - 1;
+  const [tw, th] = pill(Lr, x, y, day.cont ? `第 ${day.n} 天（續）` : `第 ${day.n} 天`, bp * 1.35, C.sun, C.ink);
+  const hasOri = day.cont || day.tasks.some(t => t.ori);
+  const right = hasOri ? `第 ${day.week} 週` : `＿＿ 月 ＿＿ 日　星期 ＿＿`;
+  Lr.T(x + tw + 4, y + (th - bp * K * LH) / 2, w - tw - 4, right, bp * (hasOri ? 0.9 : 1), { al: 'right', c: hasOri ? C.mute : C.ink });
+  y += th + 3.5;
+  if (day.recall) {
+    const hh = bp * K * LH, bh = hh * 2 + 7;
+    Lr.R(x, y, w, bh, { fill: 'FDE9E7', r: 2.5 });
+    Lr.T(x + 4, y + 3, w - 8, '回想一下：昨天記的詞，還記得哪些？說說看或寫在旁邊。', bp * 0.95, { b: true, c: '9A3A32' });
+    Lr.T(x + 4, y + 3 + hh + 1, w - 8, `昨天共有 ${day.recall.length} 個詞，我記得 ＿＿ 個。`, bp * 0.95);
+    y += bh + 4;
+  }
+  day.tasks.forEach((t, i) => {
+    const D = DOMAINS[t.dom];
+    const [pw, ph] = pill(Lr, x, y, D.name, bp * 0.8, D.color);
+    Lr.T(x + pw + 3, y + (ph - bp * 1.15 * K * LH) / 2, w - pw - 3, t.title, bp * 1.15, { b: true, font: 'title' });
+    y += ph + 2.5;
+    y += Lr.T(x, y, w, t.guide, bp * (f >= 0.8 ? 1 : Math.max(0.86, f + 0.18))) + 2.5;
+    t.blocks.forEach(b => { y += layBlock(Lr, b, x, y, w, G, f) + 1.5; });
+    if (i < day.tasks.length - 1) { y += 2.5 * f; Lr.L(x, y, x + w, y, { c: 'E2DCD1', lw: 0.4, dash: true }); y += 4 * f; }
+  });
+  const fh = bp * K * 2.4, fy = H - M - fh - 1;
+  if (day.more) { Lr.T(x, fy + (fh - bp * K * LH) / 2, w, '翻到下一頁，還有一題喔！', bp, { al: 'right', c: C.mute, b: true }); footer(Lr, G, page.no); return { items: Lr.items, used: y, limit: fy - 2 }; }
+  // 底部：完成紀錄
+  Lr.R(x, fy, w, fh, { fill: C.paper, r: fh / 2 });
+  const d = bp * K * 0.95, ty = fy + (fh - bp * K * LH) / 2;
+  let cx = x + 5;
+  Lr.R(cx, fy + (fh - d) / 2, d, d, { line: C.ink, lw: 0.5, r: 0.6 }); cx += d + 1.5;
+  Lr.T(cx, ty, 20, '完成了', bp, {}); cx += units('完成了') * bp * K + 6;
+  Lr.T(cx, ty, 20, '心情：', bp, { c: C.mute }); cx += units('心情：') * bp * K + 0.5;
+  ['很好', '還好', '有點累'].forEach(o => { Lr.E(cx, fy + (fh - d) / 2, d, d, { line: C.ink, lw: 0.45 }); cx += d + 1; Lr.T(cx, ty, 20, o, bp); cx += units(o) * bp * K + 3.5; });
+  footer(Lr, G, page.no);
+  return { items: Lr.items, used: y, limit: fy - 2 };
+}
+
+function layoutPage(page, book, G) {
+  if (page.kind === 'day') {
+    let f = 1, res;
+    for (let i = 0; i < 9; i++) { res = layoutDay(page, G, f); if (res.used <= res.limit) break; f -= 0.06; }
+    return res.items;
+  }
+  const Lr = Lay(G); const { W, H, M } = G; const bp = G.body; const x = M, w = W - 2 * M; const o = book.opt;
+  const title = o.title || '我的動腦手冊';
+  if (page.kind === 'cover') {
+    // 裝飾圓點
+    const s = W / 148;
+    Lr.E(W - 62 * s, -18 * s, 80 * s, 80 * s, { fill: 'FFE7A3' });
+    Lr.E(-20 * s, H - 70 * s, 70 * s, 70 * s, { fill: 'D8EEF9' });
+    Lr.E(W - 40 * s, H - 46 * s, 26 * s, 26 * s, { fill: 'FCD5D0' });
+    Lr.E(18 * s, 26 * s, 12 * s, 12 * s, { fill: C.coral });
+    Lr.E(34 * s, 20 * s, 7 * s, 7 * s, { fill: C.mint });
+    Lr.E(W - 30 * s, 64 * s, 9 * s, 9 * s, { fill: C.sky });
+    // 六色條
+    const bw = (w) / 6;
+    DOMAIN_ORDER.forEach((k2, i) => Lr.R(x + i * bw, 52 * s, bw - 1.5 * s, 4 * s, { fill: DOMAINS[k2].color, r: 2 * s }));
+    let y = 64 * s;
+    y += Lr.T(x, y, w, title, bp * 2.5, { b: true, font: 'title' }) + 3 * s;
+    y += Lr.T(x, y, w, o.subtitle || `每天動動腦　共 ${o.days} 天的練習`, bp * 1.15, { c: C.mute }) + 14 * s;
+    const fields = ['姓名', '開始日期'];
+    fields.forEach(fl => {
+      const lw2 = units(fl + '：') * bp * 1.1 * K;
+      Lr.T(x, y, lw2 + 2, fl + '：', bp * 1.1);
+      Lr.L(x + lw2 + 2, y + bp * 1.1 * K * LH, x + w * 0.85, y + bp * 1.1 * K * LH, { c: '9E968A', lw: 0.5 });
+      y += bp * K * 3.2;
+    });
+    y += 6 * s;
+    y += Lr.T(x, y, w, '這本手冊會練習：', bp * 0.95, { c: C.mute }) + 2.5;
+    let cx = x;
+    DOMAIN_ORDER.filter(k2 => o.domains.includes(k2)).forEach(k2 => {
+      const pw = units(DOMAINS[k2].name) * bp * K + bp * K * 1.6;
+      if (cx + pw > x + w) { cx = x; y += bp * K * 2.3; }
+      pill(Lr, cx, y, DOMAINS[k2].name, bp, DOMAINS[k2].color);
+      cx += pw + 2.5;
+    });
+    if (o.org) Lr.T(x, H - M - bp * K * LH * 2, w, o.org, bp * 0.9, { c: C.mute });
+    return Lr.items;
+  }
+  if (page.kind === 'guide') {
+    let y = M;
+    y += Lr.T(x, y, w, '怎麼使用這本手冊', bp * 1.5, { b: true, font: 'title' }) + 4;
+    const steps = ['每天找一個固定的時間，大約十五分鐘，坐在光線充足的桌子前。', '一天做一頁就好，不用趕進度；漏了一天，隔天接著做。', '先把題目唸出來再開始，慢慢做，不會的題目可以先跳過。', '寫完在頁面下方打勾，再到「完成紀錄表」把當天的數字圈起來。'];
+    steps.forEach((s2, i) => {
+      const d = bp * K * 1.7;
+      Lr.E(x, y, d, d, { fill: C.sun });
+      Lr.T(x, y, d, String(i + 1), bp * 0.9, { h: d, al: 'center', va: 'middle', b: true });
+      y += Math.max(d, Lr.T(x + d + 3, y + (d - bp * K * LH) / 2, w - d - 3, s2, bp)) + 3.5;
+    });
+    y += 3;
+    const tips = ['陪伴比答對更重要，多說一句「做得很好」。', '寫錯了不用急著糾正，可以一起再看一次。', '答案在手冊最後，可以陪長輩一起對答案。', '覺得太難或太累就先休息，明天再繼續。'];
+    let bh = bp * K * LH * 1.15 + 6; tips.forEach(t => { bh += textH('・' + t, bp * 0.95, w - 10) + 2; });
+    Lr.R(x, y, w, bh, { fill: 'E2F5EF', r: 3 });
+    let yy = y + 4;
+    yy += Lr.T(x + 5, yy, w - 10, '給家人的小提醒', bp * 1.05, { b: true, c: '1F7A60' }) + 2;
+    tips.forEach(t => { yy += Lr.T(x + 5, yy, w - 10, '・' + t, bp * 0.95) + 2; });
+    y += bh + 5;
+    Lr.T(x, y, w, '這本手冊是日常的動腦練習。如果發現記憶或生活能力明顯變差，請找醫師或職能治療師討論。', bp * 0.78, { c: C.mute });
+    footer(Lr, G, page.no);
+    return Lr.items;
+  }
+  if (page.kind === 'toc') {
+    let y = M;
+    y += Lr.T(x, y, w, '目錄', bp * 1.5, { b: true, font: 'title' }) + 5;
+    page.entries.forEach(e => {
+      const rh = bp * K * 2.2;
+      Lr.T(x, y, w * 0.75, e[0], bp);
+      Lr.T(x + w * 0.75, y, w * 0.25, String(e[1]), bp, { al: 'right', b: true });
+      Lr.L(x, y + rh - 1.5, x + w, y + rh - 1.5, { c: 'E2DCD1', lw: 0.3, dash: true });
+      y += rh;
+    });
+    footer(Lr, G, page.no);
+    return Lr.items;
+  }
+  if (page.kind === 'record') {
+    let y = M;
+    y += Lr.T(x, y, w, '完成紀錄表', bp * 1.5, { b: true, font: 'title' }) + 2;
+    y += Lr.T(x, y, w, '每完成一天，就把那一天的數字圈起來，或貼一張貼紙。', bp) + 5;
+    const cols = 7, gap = 2.2, d = Math.min((w - gap * (cols - 1)) / cols, bp * K * 3.4);
+    const gx = x + (w - (d * cols + gap * (cols - 1))) / 2;
+    const weeks = Math.ceil(o.days / 7);
+    for (let wk = 0; wk < weeks; wk++) {
+      y += Lr.T(x, y, w, `第 ${wk + 1} 週`, bp * 0.95, { b: true, c: C.mute }) + 1.5;
+      for (let i = 0; i < 7 && wk * 7 + i < o.days; i++) {
+        const n = wk * 7 + i + 1, cx = gx + i * (d + gap);
+        Lr.E(cx, y, d, d, { fill: 'FFFFFF', line: DOMAINS[DOMAIN_ORDER[wk % 6]].color, lw: 0.7 });
+        Lr.T(cx, y, d, String(n), bp * 1.05, { h: d, al: 'center', va: 'middle', b: true });
+      }
+      y += d + 4;
+    }
+    y += 3;
+    const lw2 = units('全部完成後，我想給自己的獎勵：') * bp * K;
+    Lr.T(x, y, w, '全部完成後，我想給自己的獎勵：', bp);
+    y += bp * K * LH * (lw2 > w ? 2 : 1) + bp * K * 1.6;
+    Lr.L(x, y, x + w, y, { c: '9E968A', lw: 0.5 });
+    footer(Lr, G, page.no);
+    return Lr.items;
+  }
+  if (page.kind === 'review') {
+    let y = M;
+    pill(Lr, x, y, `第 ${page.week} 週回顧`, bp * 1.35, C.mint);
+    y += bp * 1.35 * K * 1.75 + 6;
+    const qs = ['這一週我完成了 ＿＿ 天', '我最喜歡的題目是：', '我覺得最難的是：', '這一週讓我開心的事：', '家人想對我說：'];
+    const rh = bp * K * 2.3, hq = bp * K * LH, gapq = bp * K * 1.4;
+    y += Lr.T(x, y, w, qs[0], bp) + gapq;
+    const avail = H - M - 8 - y - 4 * (hq + gapq);
+    const per = Math.max(1, Math.floor(avail / 4 / rh));
+    qs.slice(1).forEach(q => {
+      y += Lr.T(x, y, w, q, bp, { b: true });
+      for (let j = 0; j < per; j++) { y += rh; Lr.L(x, y, x + w, y, { c: '9E968A', lw: 0.45 }); }
+      y += gapq;
+    });
+    footer(Lr, G, page.no);
+    return Lr.items;
+  }
+  if (page.kind === 'answers') {
+    let y = M;
+    y += Lr.T(x, y, w, page.cont ? '答案（續）' : '答案（給家人參考）', bp * 1.4, { b: true, font: 'title' }) + 1.5;
+    if (!page.cont) y += Lr.T(x, y, w, '「今天的我」與「想一想」沒有標準答案，合理就給予肯定。', bp * 0.8, { c: C.mute }) + 3;
+    const ap = bp * 0.82;
+    page.lines.forEach(l => {
+      const lab = `第 ${l.day} 天`; const lw2 = units(lab) * ap * K + 4;
+      Lr.T(x, y, lw2, lab, ap, { b: true, c: '9A6A00' });
+      let yy = y; l.items.forEach(s2 => { yy += Lr.T(x + lw2, yy, w - lw2, s2, ap) + 0.6; });
+      y = yy + 2;
+    });
+    footer(Lr, G, page.no);
+    return Lr.items;
+  }
+  if (page.kind === 'cert') {
+    const s = W / 148;
+    Lr.R(x - 2, M - 2, w + 4, H - 2 * M + 4, { line: C.sun, lw: 1.6, r: 5 });
+    Lr.R(x + 1.5, M + 1.5, w - 3, H - 2 * M - 3, { line: 'F6DD94', lw: 0.6, r: 3.5 });
+    Lr.E(W / 2 - 16 * s, M + 16 * s, 32 * s, 32 * s, { fill: 'FFE7A3' });
+    Lr.E(W / 2 - 9 * s, M + 23 * s, 18 * s, 18 * s, { fill: C.sun });
+    let y = M + 58 * s;
+    y += Lr.T(x, y, w, '完成證書', bp * 2.1, { b: true, al: 'center', font: 'title' }) + 8 * s;
+    y += Lr.T(x + 8, y, w - 16, `＿＿＿＿＿＿ 完成了 ${o.days} 天的動腦練習。`, bp * 1.1, { al: 'center' }) + 4;
+    y += Lr.T(x + 8, y, w - 16, '每一天的努力都值得被肯定，繼續保持！', bp * 1.1, { al: 'center' }) + 16 * s;
+    Lr.T(x + 8, y, w - 16, '日期：＿＿ 年 ＿＿ 月 ＿＿ 日', bp, { al: 'center' });
+    y += bp * K * 3;
+    Lr.T(x + 8, y, w - 16, '頒發人：＿＿＿＿＿＿', bp, { al: 'center' });
+    if (o.org) Lr.T(x, H - M - 14 * s, w, o.org, bp * 0.85, { al: 'center', c: C.mute });
+    return Lr.items;
+  }
+  if (page.kind === 'notes') {
+    let y = M;
+    y += Lr.T(x, y, w, '筆記', bp * 1.4, { b: true, font: 'title' }) + 4;
+    const rh = bp * K * 2.2;
+    while (y + rh < H - M - 6) { y += rh; Lr.L(x, y, x + w, y, { c: 'D9D2C6', lw: 0.4 }); }
+    footer(Lr, G, page.no);
+    return Lr.items;
+  }
+  return Lr.items;
+}
+
+// 分頁答案、加筆記頁、編頁碼、建目錄
+function finalize(book) {
+  const G = geom(book.opt);
+  const out = [];
+  book.pages.forEach(p => {
+    if (p.kind !== 'answers') { out.push(p); return; }
+    const bp = G.body, ap = bp * 0.82, w = G.W - 2 * G.M;
+    let cur = { kind: 'answers', lines: [] }, y = G.M + bp * 1.4 * K * LH + 1.5 + textH('x', bp * 0.8, w) + 3;
+    const limit = G.H - G.M - 8;
+    p.lines.forEach(l => {
+      const lw2 = units('第 99 天') * ap * K + 4;
+      const h = l.items.reduce((s, it) => s + textH(it, ap, w - lw2) + 0.6, 0) + 2;
+      if (y + h > limit && cur.lines.length) { out.push(cur); cur = { kind: 'answers', lines: [], cont: true }; y = G.M + bp * 1.4 * K * LH + 4; }
+      cur.lines.push(l); y += h;
+    });
+    out.push(cur);
+  });
+  // 一天內容太多時，自動接到下一頁
+  for (let i = 0; i < out.length; i++) {
+    const p = out[i];
+    if (p.kind !== 'day' || p.day.tasks.length < 2) continue;
+    const fits = pg => { const r = layoutDay(pg, G, 0.64); return r.used <= r.limit; };
+    if (fits(p)) continue;
+    let k = p.day.tasks.length - 1;
+    while (k > 1 && !fits({ kind: 'day', day: Object.assign({}, p.day, { tasks: p.day.tasks.slice(0, k) }) })) k--;
+    const d1 = Object.assign({}, p.day, { tasks: p.day.tasks.slice(0, k), more: true });
+    const d2 = Object.assign({}, p.day, { tasks: p.day.tasks.slice(k), recall: null, cont: true });
+    out.splice(i, 1, { kind: 'day', day: d1 }, { kind: 'day', day: d2 });
+  }
+  if (book.opt.format === 'A5' && book.opt.booklet !== false) {
+    const lastIsCert = out.length && out[out.length - 1].kind === 'cert';
+    while (out.length % 4) out.splice(lastIsCert ? out.length - 1 : out.length, 0, { kind: 'notes' });
+  }
+  out.forEach((p, i) => { p.no = p.kind === 'cover' || p.kind === 'cert' ? 0 : i + 1; });
+  const toc = out.find(p => p.kind === 'toc');
+  if (toc) {
+    const e = []; const find = k2 => out.findIndex(p => p.kind === k2) + 1;
+    if (find('guide')) e.push(['怎麼使用這本手冊', find('guide')]);
+    if (find('record')) e.push(['完成紀錄表', find('record')]);
+    for (let wk = 1; wk <= book.weeks; wk++) {
+      const i = out.findIndex(p => p.kind === 'day' && p.day.week === wk);
+      const a = (wk - 1) * 7 + 1, b = Math.min(wk * 7, book.opt.days);
+      e.push([`第 ${wk} 週（第 ${a}–${b} 天）`, i + 1]);
+    }
+    if (find('answers')) e.push(['答案（給家人參考）', find('answers')]);
+    if (find('cert')) e.push(['完成證書', find('cert')]);
+    toc.entries = e;
+  }
+  book.pages = out;
+  book.G = G;
+  book.layouts = out.map(p => layoutPage(p, book, G));
+  return book;
+}
+
+/* ---------- 匯出：PPTX（可編輯形狀與文字） ---------- */
+const FONT_PPT = 'Microsoft JhengHei';
+function exportPptx(book, PptxGenJS) {
+  const G = book.G, pptx = new PptxGenJS(), I = v => v / 25.4;
+  pptx.defineLayout({ name: 'BOOK', width: I(G.W), height: I(G.H) });
+  pptx.layout = 'BOOK';
+  pptx.title = book.opt.title || '我的動腦手冊';
+  book.layouts.forEach(items => {
+    const s = pptx.addSlide(); s.background = { color: 'FFFFFF' };
+    items.forEach(it => {
+      if (it.t === 'rect') {
+        const o = { x: I(it.x), y: I(it.y), w: I(it.w), h: I(it.h), fill: it.fill ? { color: it.fill } : { type: 'none' }, line: it.line ? { color: it.line, width: it.lw * 2.835, dashType: it.dash ? 'dash' : 'solid' } : { type: 'none' } };
+        if (it.r) o.rectRadius = I(it.r);
+        s.addShape(it.r ? pptx.ShapeType.roundRect : pptx.ShapeType.rect, o);
+      } else if (it.t === 'ellipse') {
+        s.addShape(pptx.ShapeType.ellipse, { x: I(it.x), y: I(it.y), w: I(it.w), h: I(it.h), fill: it.fill ? { color: it.fill } : { type: 'none' }, line: it.line ? { color: it.line, width: it.lw * 2.835 } : { type: 'none' } });
+      } else if (it.t === 'line') {
+        const x = Math.min(it.x, it.x2), y = Math.min(it.y, it.y2);
+        s.addShape(pptx.ShapeType.line, { x: I(x), y: I(y), w: I(Math.abs(it.x2 - it.x)), h: I(Math.abs(it.y2 - it.y)), line: { color: it.c, width: it.lw * 2.835, dashType: it.dash ? 'dash' : 'solid' } });
+      } else if (it.t === 'text') {
+        s.addText(it.txt, { x: I(it.x), y: I(it.y), w: I(it.w + 1.5), h: I(Math.max(it.h, 3)), fontFace: FONT_PPT, fontSize: Math.round(it.pt * 10) / 10, bold: it.b, color: it.c, align: it.al, valign: it.va, margin: 0, lineSpacing: it.pt * 1.3, fit: 'none', wrap: true });
+      }
+    });
+  });
+  return pptx;
+}
+
+/* ---------- 匯出：Word（可編輯文字與表格） ---------- */
+function exportDocx(book, D) {
+  const G = book.G, o = book.opt;
+  const tw = mm => Math.round(mm * 56.7);
+  const font = { ascii: FONT_PPT, eastAsia: FONT_PPT, hAnsi: FONT_PPT };
+  const hp = pt => Math.round(pt * 2);
+  const bp = G.body;
+  const run = (text, pt, x = {}) => new D.TextRun({ text, size: hp(pt), bold: !!x.b, color: x.c || C.ink, font });
+  const P = (text, pt, x = {}) => new D.Paragraph({ children: Array.isArray(text) ? text : [run(text, pt, x)], alignment: x.al === 'center' ? D.AlignmentType.CENTER : x.al === 'right' ? D.AlignmentType.RIGHT : D.AlignmentType.LEFT, spacing: { before: x.before || 0, after: x.after != null ? x.after : 100, line: x.line || 320 }, pageBreakBefore: !!x.pb, shading: x.shade ? { type: D.ShadingType.CLEAR, color: 'auto', fill: x.shade } : undefined });
+  const noB = { style: D.BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+  const lineB = { style: D.BorderStyle.SINGLE, size: 4, color: C.line };
+  const cell = (text, pt, x = {}) => new D.TableCell({ children: [P(text, pt, { al: x.al || 'center', after: 0, line: 280, b: x.b })], width: { size: x.w, type: D.WidthType.DXA }, verticalAlign: D.VerticalAlign.CENTER, shading: x.fill ? { type: D.ShadingType.CLEAR, color: 'auto', fill: x.fill } : undefined, borders: x.nob ? { top: noB, bottom: noB, left: noB, right: noB } : { top: lineB, bottom: lineB, left: lineB, right: lineB } });
+  const W = G.W - 2 * G.M;
+  const blockDocx = b => {
+    if (b.type === 'chars') {
+      const cw = Math.min(W / b.cols, G.cell * 0.95), rows = [];
+      for (let r2 = 0; r2 < b.rows; r2++) rows.push(new D.TableRow({ height: { value: tw(cw), rule: D.HeightRule.EXACT }, children: b.chars.slice(r2 * b.cols, (r2 + 1) * b.cols).map(ch => cell(ch, cw * 0.55 / K, { w: tw(cw) })) }));
+      return [new D.Table({ rows, alignment: D.AlignmentType.CENTER, columnWidths: Array(b.cols).fill(tw(cw)), width: { size: tw(cw) * b.cols, type: D.WidthType.DXA }, layout: D.TableLayoutType.FIXED }), P('', 6, { after: 60 })];
+    }
+    if (b.type === 'chips') return [P((b.label ? b.label + '：' : '') + b.items.join('　　'), bp * 1.05, { b: true, shade: C.paper, after: 160 })];
+    if (b.type === 'blanks') { const out = []; for (let i = 0; i < b.n; i += 2) out.push(P(`${i + 1}. ＿＿＿＿＿＿＿＿` + (i + 1 < b.n ? `　　${i + 2}. ＿＿＿＿＿＿＿＿` : ''), bp, { line: 440, after: 60 })); return out; }
+    if (b.type === 'lines') return b.items.map(it => typeof it === 'string' ? P(it, bp, { line: 400, after: 60 }) : P(it.t, bp, { line: 320, after: 20 }));
+    if (b.type === 'choices') return b.items.map(r2 => P(`${r2.label}：` + r2.opts.map(x => '○ ' + x).join('　'), bp, { line: 400, after: 60 }));
+    if (b.type === 'table') {
+      const tw1 = tw(Math.min(W, 100)), c1 = Math.round(tw1 * 0.62);
+      const rows = [b.head].concat(b.rows).map((r2, i) => new D.TableRow({ children: [cell(r2[0], bp, { w: c1, al: 'left', b: i === 0, fill: i === 0 ? 'FDF1D9' : null }), cell(r2[1], bp, { w: tw1 - c1, al: 'right', b: i === 0, fill: i === 0 ? 'FDF1D9' : null })] }));
+      return [new D.Table({ rows, columnWidths: [c1, tw1 - c1], width: { size: tw1, type: D.WidthType.DXA }, layout: D.TableLayoutType.FIXED }), P('', 6, { after: 60 })];
+    }
+    if (b.type === 'seq') {
+      const out = [];
+      b.rows.forEach(r2 => { const cw = tw(Math.min(W / r2.length, 16)); out.push(new D.Table({ rows: [new D.TableRow({ height: { value: tw(9.5), rule: D.HeightRule.EXACT }, children: r2.map(v => cell(v || ' ', bp * 1.1, { w: cw, b: true })) })], columnWidths: Array(r2.length).fill(cw), width: { size: cw * r2.length, type: D.WidthType.DXA }, layout: D.TableLayoutType.FIXED }), P('', 6, { after: 80 })); });
+      return out;
+    }
+    if (b.type === 'steps') return b.items.map(s => P('□　' + s, bp, { line: 400, after: 60 }));
+    if (b.type === 'para') return [P(b.text, bp * 1.05, { b: true, shade: 'F7F4EE', after: 140 })];
+    if (b.type === 'match') { const out = []; const n = Math.max(b.left.length, b.right.length); for (let i = 0; i < n; i++) out.push(P(`${b.left[i] ? `${i + 1}. ${b.left[i]}（　）` : ''}　　　　${b.right[i] || ''}`, bp, { line: 400, after: 60 })); return out; }
+    if (b.type === 'grid2') { const out = []; for (let i = 0; i < b.items.length; i += 2) out.push(P(b.items[i] + (b.items[i + 1] ? '　　　　' + b.items[i + 1] : ''), bp * 1.1, { b: true, line: 480 })); return out; }
+    return [];
+  };
+  const children = [];
+  book.pages.forEach((p, idx) => {
+    const pb = idx > 0;
+    if (p.kind === 'cover') { children.push(P('', 10, { pb, after: 1600 }), P(o.title || '我的動腦手冊', bp * 2.5, { b: true, after: 240 }), P(o.subtitle || `每天動動腦　共 ${o.days} 天的練習`, bp * 1.15, { c: C.mute, after: 900 }), P('姓名：＿＿＿＿＿＿＿＿＿＿', bp * 1.1, { after: 360 }), P('開始日期：＿＿＿＿＿＿＿＿', bp * 1.1, { after: 900 })); if (o.org) children.push(P(o.org, bp * 0.9, { c: C.mute })); }
+    else if (p.kind === 'guide') {
+      children.push(P('怎麼使用這本手冊', bp * 1.5, { b: true, pb }));
+      ['每天找一個固定的時間，大約十五分鐘，坐在光線充足的桌子前。', '一天做一頁就好，不用趕進度；漏了一天，隔天接著做。', '先把題目唸出來再開始，慢慢做，不會的題目可以先跳過。', '寫完在頁面下方打勾，再到「完成紀錄表」把當天的數字圈起來。'].forEach((s, i) => children.push(P(`${i + 1}. ${s}`, bp)));
+      children.push(P('給家人的小提醒', bp * 1.05, { b: true, c: '1F7A60', before: 200, shade: 'E2F5EF' }));
+      ['陪伴比答對更重要，多說一句「做得很好」。', '寫錯了不用急著糾正，可以一起再看一次。', '答案在手冊最後，可以陪長輩一起對答案。', '覺得太難或太累就先休息，明天再繼續。'].forEach(s => children.push(P('・' + s, bp * 0.95, { shade: 'E2F5EF' })));
+      children.push(P('這本手冊是日常的動腦練習。如果發現記憶或生活能力明顯變差，請找醫師或職能治療師討論。', bp * 0.78, { c: C.mute, before: 200 }));
+    }
+    else if (p.kind === 'toc') { children.push(P('目錄', bp * 1.5, { b: true, pb })); p.entries.forEach(e => children.push(P(`${e[0]}　……　${e[1]}`, bp))); }
+    else if (p.kind === 'record') {
+      children.push(P('完成紀錄表', bp * 1.5, { b: true, pb }), P('每完成一天，就把那一天的數字圈起來，或貼一張貼紙。', bp));
+      for (let wk = 0; wk < book.weeks; wk++) { const nums = []; for (let i = 1; i <= 7 && wk * 7 + i <= o.days; i++) nums.push(String(wk * 7 + i)); children.push(P(`第 ${wk + 1} 週`, bp * 0.95, { b: true, c: C.mute })); children.push(new D.Table({ rows: [new D.TableRow({ height: { value: tw(13), rule: D.HeightRule.EXACT }, children: nums.map(n => cell(n, bp * 1.05, { w: tw(14), b: true })) })], columnWidths: Array(nums.length).fill(tw(14)), width: { size: tw(14) * nums.length, type: D.WidthType.DXA }, layout: D.TableLayoutType.FIXED }), P('', 6, { after: 80 })); }
+      children.push(P('全部完成後，我想給自己的獎勵：', bp, { before: 200 }), P('＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿', bp));
+    }
+    else if (p.kind === 'day') {
+      const day = p.day, hasOri = day.cont || day.tasks.some(t => t.ori);
+      children.push(P([run(day.cont ? `第 ${day.n} 天（續）` : `第 ${day.n} 天`, bp * 1.35, { b: true }), run(hasOri || day.cont ? `　　第 ${day.week} 週` : '　　＿＿ 月 ＿＿ 日　星期 ＿＿', bp * 0.95, { c: hasOri ? C.mute : C.ink })], 0, { pb, shade: 'FFF2C7' }));
+      if (day.recall) { children.push(P('回想一下：昨天記的詞，還記得哪些？說說看或寫在旁邊。', bp * 0.95, { b: true, c: '9A3A32', shade: 'FDE9E7' }), P(`昨天共有 ${day.recall.length} 個詞，我記得 ＿＿ 個。`, bp * 0.95, { shade: 'FDE9E7' })); }
+      day.tasks.forEach(t => {
+        const Dm = DOMAINS[t.dom];
+        children.push(P([run(`【${Dm.name}】`, bp, { b: true, c: Dm.color }), run(t.title, bp * 1.15, { b: true })], 0, { before: 160 }));
+        children.push(P(t.guide, bp));
+        t.blocks.forEach(b => children.push(...blockDocx(b)));
+      });
+      children.push(day.more ? P('翻到下一頁，還有一題喔！', bp, { al: 'right', c: C.mute, before: 200 }) : P('□ 完成了　　心情：○很好　○還好　○有點累', bp, { shade: C.paper, before: 200 }));
+    }
+    else if (p.kind === 'review') { children.push(P(`第 ${p.week} 週回顧`, bp * 1.35, { b: true, pb, c: '1F7A60' }), P('這一週我完成了 ＿＿ 天', bp, { line: 480 })); ['我最喜歡的題目是：', '我覺得最難的是：', '這一週讓我開心的事：', '家人想對我說：'].forEach(q => children.push(P(q, bp, { b: true }), P('＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿', bp, { line: 480 }))); }
+    else if (p.kind === 'answers') { children.push(P(p.cont ? '答案（續）' : '答案（給家人參考）', bp * 1.4, { b: true, pb })); if (!p.cont) children.push(P('「今天的我」與「想一想」沒有標準答案，合理就給予肯定。', bp * 0.8, { c: C.mute })); p.lines.forEach(l => children.push(P([run(`第 ${l.day} 天　`, bp * 0.82, { b: true, c: '9A6A00' }), run(l.items.join('；'), bp * 0.82)], 0, { after: 80, line: 300 }))); }
+    else if (p.kind === 'cert') { children.push(P('', 10, { pb, after: 1400 }), P('完成證書', bp * 2.1, { b: true, al: 'center', after: 500 }), P(`＿＿＿＿＿＿ 完成了 ${o.days} 天的動腦練習。`, bp * 1.1, { al: 'center' }), P('每一天的努力都值得被肯定，繼續保持！', bp * 1.1, { al: 'center', after: 900 }), P('日期：＿＿ 年 ＿＿ 月 ＿＿ 日', bp, { al: 'center', after: 300 }), P('頒發人：＿＿＿＿＿＿', bp, { al: 'center' })); if (o.org) children.push(P(o.org, bp * 0.85, { al: 'center', c: C.mute, before: 600 })); }
+    else if (p.kind === 'notes') { children.push(P('筆記', bp * 1.4, { b: true, pb })); for (let i = 0; i < 12; i++) children.push(P('＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿', bp, { c: 'BDB6AA', line: 480 })); }
+  });
+  return new D.Document({ creator: '認知手冊生成器', title: o.title || '我的動腦手冊', styles: { default: { document: { run: { font } } } }, sections: [{ properties: { page: { size: { width: tw(G.W), height: tw(G.H) }, margin: { top: tw(G.M), bottom: tw(G.M), left: tw(G.M), right: tw(G.M) } } }, children }] });
+}
+
+/* 摺頁排序：回傳 [[左,右], ...]（1-based 頁碼，正反面交替） */
+function imposition(n) {
+  const out = [];
+  for (let s = 0; s < n / 4; s++) { out.push([n - 2 * s, 2 * s + 1]); out.push([2 * s + 2, n - 2 * s - 1]); }
+  return out;
+}
+
+/* ===== 介面 ===== */
+const DOM_DESC = { att: '找字、找數字、找圖形', mem: '看詞、短文、誰買了什麼', cal: '買菜、時間、湊錢、算式', ori: '日期、星期、節日、時鐘', lan: '補字、成語、相反詞、接龍', exe: '規律、排序、配對、分類' };
+const PAGE_OPTS = [['cover', '封面'], ['guide', '使用說明'], ['toc', '目錄'], ['record', '完成紀錄表'], ['review', '每週回顧'], ['recall', '隔天回想昨天的詞'], ['answers', '答案頁'], ['cert', '完成證書']];
+const state = { days: 14, perDay: 2, level: 'grow', format: 'A5', fontScale: 1, view: 'spread', domains: ['att', 'mem', 'cal', 'ori', 'lan', 'exe'], include: { cover: 1, guide: 1, toc: 1, record: 1, review: 1, answers: 1, cert: 1 }, recall: true, seed: (Date.now() % 1e9) | 0 };
+let book = null;
+const $ = id => document.getElementById(id);
+const PX = 96 / 25.4;
+
+function opts() {
+  return { seed: state.seed, title: $('title').value.trim() || '我的動腦手冊', subtitle: $('subtitle').value.trim(), org: $('org').value.trim(), days: state.days, perDay: state.perDay, domains: state.domains, level: state.level, format: state.format, fontScale: state.fontScale, recall: state.recall, include: state.include };
+}
+
+function renderPage(items, G) {
+  const pg = document.createElement('div');
+  pg.className = 'page';
+  pg.style.width = G.W + 'mm'; pg.style.height = G.H + 'mm';
+  const frag = document.createDocumentFragment();
+  items.forEach(it => {
+    const d = document.createElement('div');
+    d.className = 'it';
+    if (it.t === 'line') {
+      const hz = Math.abs(it.y2 - it.y) < 0.01;
+      d.style.left = Math.min(it.x, it.x2) + 'mm'; d.style.top = Math.min(it.y, it.y2) + 'mm';
+      const b = `${it.lw}mm ${it.dash ? 'dashed' : 'solid'} #${it.c}`;
+      if (hz) { d.style.width = Math.abs(it.x2 - it.x) + 'mm'; d.style.borderTop = b; }
+      else { d.style.height = Math.abs(it.y2 - it.y) + 'mm'; d.style.borderLeft = b; }
+    } else {
+      d.style.left = it.x + 'mm'; d.style.top = it.y + 'mm'; d.style.width = it.w + 'mm'; d.style.height = it.h + 'mm';
+      if (it.t === 'rect' || it.t === 'ellipse') {
+        if (it.fill) d.style.background = '#' + it.fill;
+        if (it.line) d.style.border = `${it.lw}mm ${it.dash ? 'dashed' : 'solid'} #${it.line}`;
+        d.style.borderRadius = it.t === 'ellipse' ? '50%' : it.r + 'mm';
+      } else {
+        d.className = 'it tx' + (it.va === 'middle' ? ' mid' : '') + (it.al === 'center' ? ' c' : it.al === 'right' ? ' r' : '');
+        d.style.fontSize = it.pt + 'pt';
+        d.style.color = '#' + it.c;
+        d.style.fontWeight = it.b ? '700' : '400';
+        d.style.fontFamily = it.font === 'title' ? 'var(--title)' : 'var(--body)';
+        if (it.va === 'middle') { const s = document.createElement('span'); s.textContent = it.txt; d.appendChild(s); } else d.textContent = it.txt;
+        d.style.width = (it.w + 1) + 'mm';
+      }
+    }
+    frag.appendChild(d);
+  });
+  pg.appendChild(frag);
+  return pg;
+}
+
+function pageLabel(p, i) {
+  const map = { cover: '封面', guide: '使用說明', toc: '目錄', record: '完成紀錄表', review: `第 ${p.week} 週回顧`, answers: '答案', cert: '完成證書', notes: '筆記' };
+  if (p.kind === 'day') return `第 ${p.day.n} 天${p.day.cont ? '（續）' : ''}`;
+  return map[p.kind];
+}
+
+function drawPreview() {
+  const box = $('preview'); box.innerHTML = '';
+  const G = book.G, n = book.pages.length;
+  const avail = box.clientWidth || 600;
+  let groups = [];
+  if (state.view === 'spread' && n > 1) {
+    groups.push([0]);
+    for (let i = 1; i < n - 1; i += 2) groups.push(i + 1 < n - 1 ? [i, i + 1] : [i]);
+    if (n > 1) groups.push([n - 1]);
+  } else groups = book.pages.map((_, i) => [i]);
+  const spreadW = G.W * PX * 2, singleW = G.W * PX;
+  const scale = Math.min(1, (avail - 8) / (state.view === 'spread' ? spreadW : singleW), state.view === 'spread' ? 1 : 0.9);
+  groups.forEach(g => {
+    const wrap = document.createElement('div'); wrap.className = 'spread';
+    const sh = document.createElement('div'); sh.className = 'sheet' + (g.length === 2 ? ' two' : '');
+    g.forEach(i => {
+      const h = document.createElement('div'); h.className = 'holder';
+      h.style.width = G.W * PX * scale + 'px'; h.style.height = G.H * PX * scale + 'px';
+      const pg = renderPage(book.layouts[i], G); pg.style.transform = `scale(${scale})`;
+      h.appendChild(pg); sh.appendChild(h);
+    });
+    const cap = document.createElement('div'); cap.className = 'cap';
+    cap.textContent = g.map(i => `${i + 1}．${pageLabel(book.pages[i], i)}`).join('　　');
+    wrap.appendChild(sh); wrap.appendChild(cap); box.appendChild(wrap);
+  });
+}
+
+function rebuild() {
+  book = finalize(buildBook(opts()));
+  const n = book.pages.length;
+  $('pc').textContent = `${n} 頁`;
+  const kinds = new Set(book.days.flatMap(d => d.tasks.map(t => t.kind))).size;
+  $('pcs').textContent = (state.format === 'A5' ? `印成小冊子需要 ${n / 4} 張 A4 紙（雙面）` : `A4 單面需要 ${n} 張紙`) + `\n共用了 ${kinds} 種題型`;
+  $('perHint').textContent = state.perDay === 3 ? '一天三題時，放不下的題目會接到下一頁，頁數會變多。' : (state.format === 'A5' && state.fontScale > 1 && state.perDay > 1 ? 'A5 用特大字時，較長的題目會接到下一頁。' : '');
+  $('dlBook').classList.toggle('hide', state.format !== 'A5');
+  $('printTip').textContent = state.format === 'A5'
+    ? '摺頁小冊：用 A4 橫向、雙面列印、選「短邊翻頁」，整疊對摺後在中線釘兩針。Word 檔可在「版面設定」選「書籍摺頁」列印。'
+    : 'A4 單頁可直接單面或雙面列印，用長尾夾或打洞裝訂。';
+  const sub = $('subtitle'); sub.placeholder = `每天動動腦　共 ${state.days} 天的練習`;
+  drawPreview();
+}
+let tmr; const later = () => { clearTimeout(tmr); tmr = setTimeout(rebuild, 160); };
+
+function syncSeg() {
+  document.querySelectorAll('.seg[data-k]').forEach(seg => {
+    const k = seg.dataset.k;
+    seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(String(state[k]) === b.dataset.v)));
+  });
+}
+document.querySelectorAll('.seg[data-k]').forEach(seg => {
+  seg.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const k = seg.dataset.k, v = b.dataset.v;
+    state[k] = ['days', 'perDay', 'fontScale'].includes(k) ? +v : v;
+    syncSeg(); k === 'view' ? drawPreview() : later();
+  });
+});
+
+const domBox = $('doms');
+DOMAIN_ORDER.forEach(k => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'dom'; b.style.color = '#' + DOMAINS[k].color;
+  b.innerHTML = `<span class="sw"></span><span><b>${DOMAINS[k].name}</b><small>${DOM_DESC[k]}</small></span>`;
+  b.setAttribute('aria-pressed', 'true');
+  b.addEventListener('click', () => {
+    const on = state.domains.includes(k);
+    if (on && state.domains.length === 1) { toast('至少要留一種能力'); return; }
+    state.domains = on ? state.domains.filter(x => x !== k) : DOMAIN_ORDER.filter(x => x === k || state.domains.includes(x));
+    b.setAttribute('aria-pressed', String(!on)); later();
+  });
+  domBox.appendChild(b);
+});
+const ck = $('checks');
+PAGE_OPTS.forEach(([k, label]) => {
+  const l = document.createElement('label');
+  const i = document.createElement('input'); i.type = 'checkbox'; i.checked = true;
+  i.addEventListener('change', () => { if (k === 'recall') state.recall = i.checked; else state.include[k] = i.checked ? 1 : 0; later(); });
+  l.appendChild(i); l.appendChild(document.createTextNode(label)); ck.appendChild(l);
+});
+['title', 'subtitle', 'org'].forEach(id => $(id).addEventListener('input', later));
+$('reroll').addEventListener('click', () => { state.seed = (state.seed * 1103515245 + 12345) >>> 0; rebuild(); toast('已換一組新題目'); });
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(drawPreview, 200); });
+
+/* ===== 下載 ===== */
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2400); }
+const loaded = {};
+function loadScript(src) {
+  if (!loaded[src]) loaded[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load')); document.head.appendChild(s); });
+  return loaded[src];
+}
+async function saveFile(name, blob) {
+  try {
+    if (window.claude && typeof window.claude.use === 'function') {
+      const dl = await window.claude.use('downloads');
+      if (dl) { await dl.save({ filename: name, data: blob }); toast('已下載 ' + name); return; }
+    }
+  } catch (e) { if (e && e.code === 'declined') return; if (e && e.code && !['unavailable', 'not_granted', 'capability_disabled', 'capability_removed'].includes(e.code)) { toast('下載沒有完成，請再試一次'); return; } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('已下載 ' + name);
+}
+function fname(ext, extra = '') { return `${(book.opt.title || '動腦手冊').replace(/[\\/:*?"<>|]/g, '')}_${book.opt.days}天_${book.opt.format}${extra}.${ext}`; }
+async function busy(btn, fn) {
+  const label = btn.querySelector('span'), old = label.textContent;
+  btn.disabled = true; label.textContent = '製作中…';
+  try { await fn(p => { label.textContent = p; }); }
+  catch (e) { console.error(e); toast('製作失敗，請檢查網路後再試一次'); }
+  finally { btn.disabled = false; label.textContent = old; }
+}
+$('dlPpt').addEventListener('click', e => busy(e.currentTarget, async () => {
+  await loadScript('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+  const blob = await exportPptx(book, window.PptxGenJS).write({ outputType: 'blob' });
+  await saveFile(fname('pptx'), blob);
+}));
+$('dlDoc').addEventListener('click', e => busy(e.currentTarget, async () => {
+  await loadScript('https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js');
+  const blob = await window.docx.Packer.toBlob(exportDocx(book, window.docx));
+  await saveFile(fname('docx'), blob);
+}));
+async function renderImages(setP) {
+  await Promise.all([loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'), loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')]);
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  const off = $('off'), imgs = [], n = book.pages.length;
+  for (let i = 0; i < n; i++) {
+    setP(`第 ${i + 1} / ${n} 頁`);
+    off.innerHTML = ''; const pg = renderPage(book.layouts[i], book.G); off.appendChild(pg);
+    const cv = await window.html2canvas(pg, { scale: 2, backgroundColor: '#ffffff', logging: false });
+    imgs.push(cv.toDataURL('image/jpeg', 0.9));
+  }
+  off.innerHTML = '';
+  return imgs;
+}
+$('dlPdf').addEventListener('click', e => busy(e.currentTarget, async setP => {
+  const imgs = await renderImages(setP), G = book.G;
+  const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: [G.W, G.H], orientation: 'portrait' });
+  imgs.forEach((im, i) => { if (i) pdf.addPage([G.W, G.H], 'portrait'); pdf.addImage(im, 'JPEG', 0, 0, G.W, G.H); });
+  await saveFile(fname('pdf'), pdf.output('blob'));
+}));
+$('dlBook').addEventListener('click', e => busy(e.currentTarget, async setP => {
+  const imgs = await renderImages(setP), n = imgs.length;
+  const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+  imposition(n).forEach(([l, r], i) => {
+    if (i) pdf.addPage('a4', 'landscape');
+    pdf.addImage(imgs[l - 1], 'JPEG', 0, 0, 148.5, 210);
+    pdf.addImage(imgs[r - 1], 'JPEG', 148.5, 0, 148.5, 210);
+    pdf.setDrawColor(220); pdf.setLineDashPattern([1.5, 2], 0); pdf.line(148.5, 4, 148.5, 12); pdf.line(148.5, 198, 148.5, 206);
+  });
+  await saveFile(fname('pdf', '_摺頁小冊'), pdf.output('blob'));
+}));
+
+syncSeg();
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(rebuild);
+rebuild();
+</script></body></html>
